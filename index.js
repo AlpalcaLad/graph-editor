@@ -10,16 +10,19 @@ const centery=ch/2
 //endregion
 
 //region Constants
-ctx.font = "30px Arial";
+const mainFont = "30px Arial";
+ctx.font=mainFont;
 const pi = Math.PI;
 const E = 2.71828;
 const radsConvert = (2*pi/360);
 //end region
 
 //region Debugger
+//tool that keeps track of fps (max 1000fps)
+//currently fps is too good to be measured lol
 class debuggingTool{
     constructor(){
-        this.timer=new Date();
+        this.timer=new Date(); //create date object to get times
 
         this.frameTimes=[];
         this.frameTimesLength=60;
@@ -31,20 +34,22 @@ class debuggingTool{
         this.drawTimes=[];
         this.drawTimesLength=60;
         this.drawStart=this.stepStart;
-        this.z=1000
+        this.z=1000 //ui elements draw very far forwards (should replace with post draw soon)
     }
-    startStep(){this.stepStart=this.timer.getTime()}
-    endStep(){
+    startStep(){this.stepStart=this.timer.getTime()} //before step events
+    endStep(){ //after step events
         this.stepTimes.push(this.timer.getTime()-this.stepStart)
+        //if >60 values, remove oldest one
         if (this.stepTimes.length>this.stepTimesLength){this.stepTimes.splice(0,1)}
     }
-    startDraw(){this.drawStart=this.timer.getTime()}
-    endDraw(){
+    startDraw(){this.drawStart=this.timer.getTime()} //before draw events
+    endDraw(){ //after draw events
         this.drawTimes.push(this.timer.getTime()-this.drawStart)
+        //if >60 values, remove oldest one
         if (this.drawTimes.length>this.drawTimesLength){this.drawTimes.splice(0,1)}
     }
-    draw(){
-        ctx.font = "15px Arial";
+    draw(){ //calculate average of last 60 steps and draws
+        ctx.font = "15px Arial"; //use smaller font for this
         ctx.fillStyle="#000000"
         if (this.stepTimes.length>0){
             ctx.fillText("Step Length (ms): "+average(this.stepTimes),10,20);
@@ -68,6 +73,7 @@ class scheduler{
         //objects who have requested to be called during processing
         //NOT self managed, objects will need to implement a kill method
         //to remove themselves from these arrays
+        this.prestep=[];
         this.step = [];
         this.draw = [];
         this.frameRate=60; //already handled by requestAnimation Frame
@@ -81,10 +87,12 @@ class scheduler{
         }
     }
 
-    orderDrawers(){ //orders anything in the draw array based on its z (higher z draws later)
+    //orders anything in the draw array based on its z (higher z draws later)
+    orderDrawers(){ 
         this.draw.sort((a,b) => a.z-b.z)
     }
 
+    //every animation frame, clear canvas, run steps, run draws and schedule self
     tick(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.runStep();
@@ -96,6 +104,10 @@ class scheduler{
         //all object step events
         //to add an object, append its reference to the scheduler.step
         if (this.debugMode){this.debugger.startStep();}
+        //loop through all objects that registered themselves to prestep and step
+        for (var i=0;i<this.prestep.length;i++){
+            this.prestep[i].prestep();
+        }
         for (var i=0;i<this.step.length;i++){
             this.step[i].step();
         }
@@ -106,14 +118,17 @@ class scheduler{
         //all object draw events
         //to add an object, add its reference to the scheduler.draw
         if (this.debugMode){this.debugger.startDraw();}
+        //loop through all objects that registered themselves to draw
         for (var i=0;i<this.draw.length;i++){
             this.draw[i].draw();
         }
         if (this.debugMode){this.debugger.endDraw();}
     }
 }
-const s = new scheduler();
-s.tick=function(){
+const s = new scheduler(); //create a single scheduler to handle game
+//redefine tick to use the constant pointer rather than a hanging 'this'
+//this is needed as the requestAnimationFrame cannot provide arguments
+s.tick=function(){ 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     s.runStep();
     s.runDraw();
@@ -144,13 +159,14 @@ class mouse{
         //object MUST contain variables this.x,this.y.this.bbox
         this.leftclickListeners=[] 
     }
-    get(x,y){
+    get(x,y){ //get coordinate relative to camera (redundant-> TODO remove this)
         return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
     }
     orderClickers(){
         //order clickers based on z (the closest thing to view gets selected first)
         this.leftclickListeners.sort((a,b) => b.z-a.z) 
     }
+    //raises the specified element to the top of the canvas (relative to other clickables)
     raiseClicker(i){ //pass index to leftClickListeners
         let tempStore=this.leftclickListeners[0].z;
         for (let j=i-1; j>-1; j--){
@@ -176,13 +192,15 @@ class mouse{
         }
     }
 }
-const m = new mouse();
+const m = new mouse(); //instantiate static mouse object
+//the below are predefined javascript functions that capture mouse movement and clicks
 onmousemove = function(e){
     m.xRel = e.clientX;
     m.yRel = e.clientY;
+    //calculate new mouse position relative to camera
     m.x = (m.xRel)/c.zoom + c.x;
     m.y = (m.yRel)/c.zoom + c.y;
-    if (m.mb_middle){
+    if (m.mb_middle){ //if mouse moved and is dragging, adjust camera view based on new position
         if (m.ox!=m.x || m.oy!=m.y){
             c.x-=(m.xRel-m.ox)/c.zoom
             c.y-=(m.yRel-m.oy)/c.zoom
@@ -193,14 +211,14 @@ onmousemove = function(e){
 }
 onmousedown = function(e){
     switch (e.button){
-        case 0:
+        case 0: //left click
             m.mb_left = true;
             m.onClick();
             break;
-        case 2:
+        case 2: //right click
             m.mb_right = true;
             break;
-        case 1:
+        case 1: //middle click
             m.mb_middle = true;
             m.grabPoint = [m.xRel,m.yRel];
             m.ox=m.xRel;
@@ -210,13 +228,13 @@ onmousedown = function(e){
 }
 onmouseup = function(e){
     switch (e.button){
-        case 0:
+        case 0: //left click stopped
             m.mb_left = false;
             break;
-        case 2:
+        case 2: //right click stopped
             m.mb_right = false;
             break;
-        case 1:
+        case 1: //middle click stopped
             m.mb_middle = false;
             break;
     }
@@ -231,17 +249,21 @@ class camera{
         this.targX=this.x;
         this.targY=this.y;
         this.zoom=1;
+        //a larger zoom means a closer view
+        this.zoomMax=10;
+        this.zoomMin=0.1;
     }
     get(x,y){ //map coordinate to camera space
         return [(x-this.x)*this.zoom,(y-this.y)*this.zoom];
     }
     zoomTo(delta){
-        // Mouse coordinate before zoom
+        // Mouse coordinate before zoom 
+        //(equivilent to mouse.get but i chose to just do it statically)
         const bx = m.xRel / c.zoom + c.x;
         const by = m.yRel / c.zoom + c.y;
         // Apply zoom
         c.zoom/=Math.pow(1.1,delta);
-        c.zoom=clamp(c.zoom,0.1,10);
+        c.zoom=clamp(c.zoom,this.zoomMin,this.zoomMax);
         // Mouse coordinate after zoom
         const ax = m.xRel / c.zoom + c.x;
         const ay = m.yRel / c.zoom + c.y;
@@ -263,8 +285,8 @@ class sprite {
         this.z=z;
         this.x=x;
         this.y=y;
-        s.draw.push(this);
-        s.orderDrawers();
+        s.draw.push(this); //register self to draw
+        s.orderDrawers(); //sort drawers now theres a new element
     }
     draw(){ //draws circle at parent position
         if (this.type == "c"){ //circle
@@ -323,6 +345,9 @@ class node{
 }
 //region physics node
 const physicsNodes=[]
+const doGravity = false; //whether nodes should process gravity
+const G = 5 //gravitational constant
+const collisionRepulsion=1;
 class physicsNode extends node{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5){
         super(x,y,radius,colour,z);
@@ -330,9 +355,23 @@ class physicsNode extends node{
         this.e=elasticity;
         this.r=radius
         physicsNodes.push(this);
+        s.prestep.push(this);
         this.vsp=0
         this.hsp=0
         this.frict=1.05
+    }
+    prestep(){ //do all gravity and repulsion before anything moves
+        if (doGravity){
+            for (let i=0; i<physicsNodes.length; i++){
+                let n = physicsNodes[i]
+                if (n!=this && this.dist(n)>(n.r+this.r+2)){
+                    this.force( //GMm/r^2
+                        G*this.m*n.m/Math.pow(this.dist(n),2),
+                        [n.x-this.x,n.y-this.y]
+                    )
+                }
+            }
+        }
     }
     step(){
         if (this.grabbed){
@@ -345,13 +384,26 @@ class physicsNode extends node{
         }
         this.hsp/=this.frict
         this.vsp/=this.frict
-
-        //collision and movement
         if (this.place_meeting(this.x+this.hsp,this.y+this.vsp)){
             let collidingObjects=this.colliders(this.x+this.hsp,this.y+this.vsp);
-            let center = this.center_of_mass(collidingObjects);
-            this.force(-15,[center[0]-this.x,center[1]-this.y]);
+            //let center = this.center_of_mass(collidingObjects);
+            for (let i=0; i<collidingObjects.length; i++){
+                let n = collidingObjects[i]
+                //if already colliding perform repulsion
+                if (this.node_collision(this.x,this.y,n)){
+                    this.force(-collisionRepulsion,[n.x-this.x,n.y-this.y]);
+                } else { //otherwise do elastic collision
+                    let vec = normalize([this.hsp,this.vsp]) //step in direction until collision
+                    while (!this.place_meeting(this.x+vec[0],this.y+vec[1])){
+                        this.x+=vec[0]
+                        this.y+=vec[1]
+                    }
+                    inelastic_collision(this,n)
+                }
+            } 
         }
+
+        //movement
         this.x+=this.hsp
         this.y+=this.vsp
         //move sprite to self in case moved
@@ -379,7 +431,10 @@ class physicsNode extends node{
         if (massSum==0){return [this.x,this.y]}
         return [xSum/massSum,ySum/massSum];
     }
-    colliders(x,y){
+    dist(n){ //distance to node
+        return Math.sqrt(Math.pow(this.x-n.x,2)+Math.pow(this.y-n.y,2))
+    }
+    colliders(x,y){ //returns list of objects that would collide with self at x,y
         let collidingObjects=[];
         for (let i=0; i<physicsNodes.length; i++){
             if (physicsNodes[i]!=this){
@@ -388,22 +443,22 @@ class physicsNode extends node{
         }
         return collidingObjects;
     }
-    place_meeting(x,y){
+    place_meeting(x,y){ //returns whether any objects would collide with self at x,y
         for (let i=0; i<physicsNodes.length; i++){
             if (physicsNodes[i]!=this){
                 if (this.node_collision(x,y,physicsNodes[i])){return true;}
             }
         }
     }
-    place_meeting_nodes(x,y,nodes){
+    place_meeting_nodes(x,y,nodes){ //returns whether any objects in nodes would collide with self at x,y
         for (let i=0; i<nodes.length; i++){
             if (nodes[i]!=this){
                 if (this.node_collision(x,y,nodes[i])){return true;}
             }
         }
     }
-    node_collision(x,y,n){
-        let colliding=(Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))<n.r+this.r)
+    node_collision(x,y,n){ //returns whether node would collide with self at x,y
+        let colliding=(Math.sqrt(Math.pow(n.x-x,2)+Math.pow(n.y-y,2))<n.r+this.r)
         return colliding
     }
 }
@@ -574,9 +629,30 @@ INPUT: a vector like array
 OUTPUT: the array normalized as if it was a vector
 */
 function normalize(array){
+    //if no direction- randomize
+    if (array[0]==0 && array[1]==0){array=[Math.random(),Math.random()]}
     total=0
     for (let i=0; i<array.length; i++){total+=abs(array[i]);}
     for (let i=0; i<array.length; i++){array[i]/=total;}
+    return array
+}
+
+/*inelastic_collision(o1,o2)
+INPUT: two physics objects that implement hsp,vsp,m and e
+OUTPUT: void, the resulting velocities are applied to the objects
+*/
+function inelastic_collision(o1,o2){
+    //SOURCE: https://en.wikipedia.org/wiki/Elastic_collision
+    //unpack objects into variables
+    let el = (o1.e+o2.e)/2 //naive approximation of elasticity
+    let [mA,mB] = [o1.m,o2.m]
+    let [uA,uB] = [normalize([o1.hsp,o1.vsp]),normalize([o2.hsp,o2.vsp])]
+    const heVcom=((mA*uA[0]+mB*uB[0])/(mA+mB)) * (1+el) 
+    const veVcom=((mA*uA[1]+mB*uB[1])/(mA+mB)) * (1+el)
+    o1.hsp=heVcom-el*uA[0]
+    o1.vsp=veVcom-el*uA[1]
+    o2.hsp=heVcom-el*uB[0]
+    o2.vsp=veVcom-el*uB[1]
 }
 
 /*hex_to_dec(hexString)
@@ -624,8 +700,8 @@ window.addEventListener("wheel", event => {
 });
 
 //region Test code
-const nodeCount = 10 //pre gen this many nodes
-const nodeSeparation=50
+const nodeCount = 2 //pre gen this many nodes
+const nodeSeparation=250
 for (let i=0; i<nodeCount; i++){
     let size = Math.random()*30+20
     new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined)
