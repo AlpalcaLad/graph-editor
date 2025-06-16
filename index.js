@@ -1,8 +1,8 @@
 //region Canvas setup
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
-ctx.canvas.width  = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
+ctx.canvas.width  = window.innerWidth-25;
+ctx.canvas.height = window.innerHeight-25;
 const cw = ctx.canvas.width;
 const ch = ctx.canvas.height;
 const centerx=cw/2
@@ -16,7 +16,53 @@ const E = 2.71828;
 const radsConvert = (2*pi/360);
 //end region
 
+//region Debugger
+class debuggingTool{
+    constructor(){
+        this.timer=new Date();
+
+        this.frameTimes=[];
+        this.frameTimesLength=60;
+
+        this.stepTimes=[];
+        this.stepTimesLength=60;
+        this.stepStart=this.timer.getTime();
+
+        this.drawTimes=[];
+        this.drawTimesLength=60;
+        this.drawStart=this.stepStart;
+        this.z=1000
+    }
+    startStep(){this.stepStart=this.timer.getTime()}
+    endStep(){
+        this.stepTimes.push(this.timer.getTime()-this.stepStart)
+        if (this.stepTimes.length>this.stepTimesLength){this.stepTimes.splice(0,1)}
+    }
+    startDraw(){this.drawStart=this.timer.getTime()}
+    endDraw(){
+        this.drawTimes.push(this.timer.getTime()-this.drawStart)
+        if (this.drawTimes.length>this.drawTimesLength){this.drawTimes.splice(0,1)}
+    }
+    draw(){
+        ctx.font = "15px Arial";
+        ctx.fillStyle="#000000"
+        if (this.stepTimes.length>0){
+            ctx.fillText("Step Length (ms): "+average(this.stepTimes),10,20);
+        } if (this.drawTimes.length>0){
+            ctx.fillText("Draw Length (ms): "+average(this.drawTimes),10,40);
+        }
+    }
+}
+
 //region Scheduler
+/*This object manages the scheduling of nodes etc.
+It operates using two arrays: step and draw. These are not self managed,
+Objects that wish to be ran must:
+    -append themselves
+    -remove themselves when destroyed.
+All step events are ran each tick, followed by all draw events
+*/
+
 class scheduler{
     constructor(){
         //objects who have requested to be called during processing
@@ -27,6 +73,12 @@ class scheduler{
         this.frameRate=60; //already handled by requestAnimation Frame
         //TODO update frameRate to reflect monitor refresh rate
         this.elapsed=0; //seconds elapsed in program
+        this.debugMode=true;
+        this.debugger=undefined;
+        if (this.debugMode){
+            this.debugger=new debuggingTool();
+            this.draw.push(this.debugger);
+        }
     }
 
     orderDrawers(){ //orders anything in the draw array based on its z (higher z draws later)
@@ -43,17 +95,21 @@ class scheduler{
     runStep(){
         //all object step events
         //to add an object, append its reference to the scheduler.step
+        if (this.debugMode){this.debugger.startStep();}
         for (var i=0;i<this.step.length;i++){
             this.step[i].step();
         }
+        if (this.debugMode){this.debugger.endStep();}
     }
 
     runDraw(){
         //all object draw events
         //to add an object, add its reference to the scheduler.draw
+        if (this.debugMode){this.debugger.startDraw();}
         for (var i=0;i<this.draw.length;i++){
             this.draw[i].draw();
         }
+        if (this.debugMode){this.debugger.endDraw();}
     }
 }
 const s = new scheduler();
@@ -269,6 +325,12 @@ class node{
 
 //region Static funcs
 
+/* average(array)
+INPUT: An array of numbers
+OUTPUT: It's average value
+*/
+const average = array => array.reduce((a, b) => a + b) / array.length;
+
 /*abs(value):
 INPUT: Any number
 OUTPUT: The number's size but always positive
@@ -455,7 +517,7 @@ function random_colour(){
 }
 //endregion
 
-//region listeners
+//region Listeners
 window.addEventListener("wheel", event => {
     const delta = Math.sign(event.deltaY);
     c.zoomTo(delta)
