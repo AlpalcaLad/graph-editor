@@ -29,6 +29,10 @@ class scheduler{
         this.elapsed=0; //seconds elapsed in program
     }
 
+    orderDrawers(){ //orders anything in the draw array based on its z (higher z draws later)
+        this.draw.sort((a,b) => a.z-b.z)
+    }
+
     tick(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.runStep();
@@ -75,17 +79,53 @@ class mouse{
         //frame old x and y, to calculate delta x and y for the mouse
         this.ox=undefined;
         this.oy=undefined;
+        this.selected=undefined;
+        /*If true will cycle the z values of the clickable elements to bring
+        the selected object to the front*/
+        this.raiseSelected=true;
+        //append object reference to this to listen for clicks
+        //object reference MUST implement the method onClick()
+        //object MUST contain variables this.x,this.y.this.bbox
+        this.leftclickListeners=[] 
     }
     get(x,y){
         return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
+    }
+    orderClickers(){
+        //order clickers based on z (the closest thing to view gets selected first)
+        this.leftclickListeners.sort((a,b) => b.z-a.z) 
+    }
+    raiseClicker(i){ //pass index to leftClickListeners
+        let tempStore=this.leftclickListeners[0].z;
+        for (let j=i-1; j>-1; j--){
+            this.leftclickListeners[j].z=this.leftclickListeners[j+1].z;
+        }
+        this.leftclickListeners[i].z=tempStore;
+        this.orderClickers();
+    }
+    onClick(){
+        let listenersLen=this.leftclickListeners.length
+        for (let i=0; i<listenersLen; i++){
+            const obj=this.leftclickListeners[i]
+            if (obj.bbox.length==1){ //circle
+                if (Math.sqrt(Math.pow(obj.x-this.x,2)+Math.pow(obj.y-this.y,2)) < obj.bbox[0]){
+                    if (obj.onClick()) { //call on click and if true, mouse event captured
+                        //if raiseSelected on, will bring selected element to the front
+                        //and move the rest back accordingly
+                        if (this.raiseSelected && listenersLen>1){this.raiseClicker(i)}
+                        break //mouse event captured, stop looking
+                    }
+                }
+            }
+        }
     }
 }
 const m = new mouse();
 onmousemove = function(e){
     m.xRel = e.clientX;
     m.yRel = e.clientY;
-    m.x = (m.xRel-canvas.width/2)/c.zoom + c.x;
-    m.y = (m.yRel-canvas.height/2)/c.zoom + c.y;
+    m.x = (m.xRel)/c.zoom + c.x;
+    m.y = (m.yRel)/c.zoom + c.y;
     if (m.mb_middle){
         if (m.ox!=m.x || m.oy!=m.y){
             c.x-=(m.xRel-m.ox)/c.zoom
@@ -99,6 +139,7 @@ onmousedown = function(e){
     switch (e.button){
         case 0:
             m.mb_left = true;
+            m.onClick();
             break;
         case 2:
             m.mb_right = true;
@@ -158,14 +199,16 @@ const c = new camera();
 
 //region sprites
 class sprite {
-    constructor(type,bbox,parent=this,colour="#FF0000",x=150,y=150){
+    constructor(type,bbox,parent=this,colour="#FF0000",x=150,y=150,z=0){
         this.type=type;
         this.colour=colour;
         this.bbox=bbox;
         this.parent=parent;
+        this.z=z;
         this.x=x;
         this.y=y;
         s.draw.push(this);
+        s.orderDrawers();
     }
     draw(){ //draws circle at parent position
         if (this.type == "c"){ //circle
@@ -177,11 +220,51 @@ class sprite {
             ctx.fill();
         }
     }
+    kill(){
+        //remove self from the draw registered objects
+        drawInd=s.draw.indexOf(this)
+        if (drawInd!=-1) s.splice(drawInd,1)
+    }
 }
 //endregion
 
 //region objects 
-//TODO
+class node{
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0){
+        this.spr = new sprite("c",[radius],this,colour,x,y,z);
+        this.x=x;
+        this.y=y;
+        this.z=z;
+        this.bbox=[radius];
+        s.step.push(this);
+        m.leftclickListeners.push(this);
+        m.orderClickers();
+        this.grabOffset=[0,0];
+        this.grabbed=false;
+    }
+    step(){
+        if (this.grabbed){
+            if (!m.mb_left){
+                this.grabbed=false;
+            } else {
+                this.x=m.x+this.grabOffset[0];
+                this.y=m.y+this.grabOffset[1];
+            }
+        }
+        //move sprite to self in case moved
+        if (this.spr.z!=this.z){
+            this.spr.z=this.z;
+            s.orderDrawers();
+        }
+        this.spr.x=this.x;
+        this.spr.y=this.y;
+    }
+    onClick(){
+        this.grabbed=true;
+        this.grabOffset = [this.x-m.x,this.y-m.y];
+        return true; //capture input- only one node grabbed at a time
+    }
+}
 //endregion
 
 //region Static funcs
@@ -365,9 +448,9 @@ OUTPUT: A random hex colour string of form "#ff00ff"
 */
 function random_colour(){
     return dec_to_hex(
+        [Math.floor(Math.random()*255),
         Math.floor(Math.random()*255),
-        Math.floor(Math.random()*255),
-        Math.floor(Math.random()*255)
+        Math.floor(Math.random()*255)]
     )
 }
 //endregion
@@ -379,8 +462,10 @@ window.addEventListener("wheel", event => {
 });
 
 //region Test code
-let sp1=new sprite("c",[50],undefined,undefined,x=150,y=150);
-let sp2=new sprite("c",[50],undefined,colour="#00FF00",x=550,y=550);
+let n1 =new node(200,200,50,random_colour(),1)
+let n2 =new node(250,200,50,random_colour(),2)
+let n3 =new node(250,200,50,random_colour(),3)
+let n4 =new node(250,200,50,random_colour(),3)
 
 //region Setup
 s.tick();
