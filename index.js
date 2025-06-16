@@ -71,15 +71,29 @@ class mouse{
         this.mb_left=0;
         this.mb_right=0;
         this.mb_middle=0;
+        this.grabPoint = undefined;
+        //frame old x and y, to calculate delta x and y for the mouse
+        this.ox=undefined;
+        this.oy=undefined;
     }
     get(x,y){
-        return [(x-c.x)/c.zoom]
+        return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
     }
 }
 const m = new mouse();
 onmousemove = function(e){
     m.xRel = e.clientX;
     m.yRel = e.clientY;
+    m.x = (m.xRel-canvas.width/2)/c.zoom + c.x;
+    m.y = (m.yRel-canvas.height/2)/c.zoom + c.y;
+    if (m.mb_middle){
+        if (m.ox!=m.x || m.oy!=m.y){
+            c.x-=(m.xRel-m.ox)/c.zoom
+            c.y-=(m.yRel-m.oy)/c.zoom
+            m.ox=m.xRel
+            m.oy=m.yRel
+        }
+    }
 }
 onmousedown = function(e){
     switch (e.button){
@@ -91,6 +105,9 @@ onmousedown = function(e){
             break;
         case 1:
             m.mb_middle = true;
+            m.grabPoint = [m.xRel,m.yRel];
+            m.ox=m.xRel;
+            m.oy=m.yRel;
             break;
     }
 }
@@ -121,6 +138,20 @@ class camera{
     get(x,y){ //map coordinate to camera space
         return [(x-this.x)*this.zoom,(y-this.y)*this.zoom];
     }
+    zoomTo(delta){
+        // Mouse coordinate before zoom
+        const bx = m.xRel / c.zoom + c.x;
+        const by = m.yRel / c.zoom + c.y;
+        // Apply zoom
+        c.zoom/=Math.pow(1.1,delta);
+        c.zoom=clamp(c.zoom,0.1,10);
+        // Mouse coordinate after zoom
+        const ax = m.xRel / c.zoom + c.x;
+        const ay = m.yRel / c.zoom + c.y;
+        // Adjust camera position to compensate
+        c.x += bx - ax;
+        c.y += by - ay;
+    }
 }
 const c = new camera();
 //endregion
@@ -135,7 +166,6 @@ class sprite {
         this.x=x;
         this.y=y;
         s.draw.push(this);
-        console.log(this.colour);
     }
     draw(){ //draws circle at parent position
         if (this.type == "c"){ //circle
@@ -345,8 +375,7 @@ function random_colour(){
 //region listeners
 window.addEventListener("wheel", event => {
     const delta = Math.sign(event.deltaY);
-    c.zoom/=Math.pow(1.1,delta)
-    c.zoom=clamp(c.zoom,0.1,10)
+    c.zoomTo(delta)
 });
 
 //region Test code
