@@ -284,7 +284,7 @@ class sprite {
 }
 //endregion
 
-//region objects 
+//region node base class 
 class node{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0){
         this.spr = new sprite("c",[radius],this,colour,x,y,z);
@@ -319,6 +319,92 @@ class node{
         this.grabbed=true;
         this.grabOffset = [this.x-m.x,this.y-m.y];
         return true; //capture input- only one node grabbed at a time
+    }
+}
+//region physics node
+const physicsNodes=[]
+class physicsNode extends node{
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5){
+        super(x,y,radius,colour,z);
+        this.m=mass;
+        this.e=elasticity;
+        this.r=radius
+        physicsNodes.push(this);
+        this.vsp=0
+        this.hsp=0
+        this.frict=1.05
+    }
+    step(){
+        if (this.grabbed){
+            if (!m.mb_left){
+                this.grabbed=false;
+            } else {
+                this.hsp=((m.x+this.grabOffset[0])-this.x)/5;
+                this.vsp=((m.y+this.grabOffset[1])-this.y)/5;
+            }
+        }
+        this.hsp/=this.frict
+        this.vsp/=this.frict
+
+        //collision and movement
+        if (this.place_meeting(this.x+this.hsp,this.y+this.vsp)){
+            let collidingObjects=this.colliders(this.x+this.hsp,this.y+this.vsp);
+            let center = this.center_of_mass(collidingObjects);
+            this.force(-15,[center[0]-this.x,center[1]-this.y]);
+        }
+        this.x+=this.hsp
+        this.y+=this.vsp
+        //move sprite to self in case moved
+        if (this.spr.z!=this.z){
+            this.spr.z=this.z;
+            s.orderDrawers();
+        }
+        this.spr.x=this.x;
+        this.spr.y=this.y;
+    }
+    force(magnitude,direction){
+        normalize(direction);
+        this.hsp+=direction[0]*magnitude/this.m
+        this.vsp+=direction[1]*magnitude/this.m
+    }
+    center_of_mass(nodes){
+        let xSum=0
+        let ySum=0
+        let massSum=0
+        for (let i=0; i<nodes.length; i++){
+            xSum+=nodes[i].x*nodes[i].m;
+            ySum+=nodes[i].y*nodes[i].m;
+            massSum+=nodes[i].m;
+        }
+        if (massSum==0){return [this.x,this.y]}
+        return [xSum/massSum,ySum/massSum];
+    }
+    colliders(x,y){
+        let collidingObjects=[];
+        for (let i=0; i<physicsNodes.length; i++){
+            if (physicsNodes[i]!=this){
+                if (this.node_collision(x,y,physicsNodes[i])){collidingObjects.push(physicsNodes[i])}
+            }
+        }
+        return collidingObjects;
+    }
+    place_meeting(x,y){
+        for (let i=0; i<physicsNodes.length; i++){
+            if (physicsNodes[i]!=this){
+                if (this.node_collision(x,y,physicsNodes[i])){return true;}
+            }
+        }
+    }
+    place_meeting_nodes(x,y,nodes){
+        for (let i=0; i<nodes.length; i++){
+            if (nodes[i]!=this){
+                if (this.node_collision(x,y,nodes[i])){return true;}
+            }
+        }
+    }
+    node_collision(x,y,n){
+        let colliding=(Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))<n.r+this.r)
+        return colliding
     }
 }
 //endregion
@@ -475,8 +561,22 @@ function point_in_rect(xIn,yIn,left,top,right,bottom){
     return (xIn>left && xIn< right && yIn> top && yIn< bottom);
 }
 
+/*point_in_circle(xIn,yIn,xC,yC,radius)
+INPUT: a coordinate, the circles center coordinate and its radius (real coordinates)
+OUPUT: boolean whether the coodinate is within the bbox
+*/
 function point_in_circle(xIn,yIn,xC,yC,radius){
     return Math.sqrt(Math.pow(xIn-xC,2)+Math.pow(yIn-yC,2))<=radius
+}
+
+/*normalize(array)
+INPUT: a vector like array
+OUTPUT: the array normalized as if it was a vector
+*/
+function normalize(array){
+    total=0
+    for (let i=0; i<array.length; i++){total+=abs(array[i]);}
+    for (let i=0; i<array.length; i++){array[i]/=total;}
 }
 
 /*hex_to_dec(hexString)
@@ -524,10 +624,11 @@ window.addEventListener("wheel", event => {
 });
 
 //region Test code
-let n1 =new node(200,200,50,random_colour(),1)
-let n2 =new node(250,200,50,random_colour(),2)
-let n3 =new node(250,200,50,random_colour(),3)
-let n4 =new node(250,200,50,random_colour(),3)
-
+const nodeCount = 10 //pre gen this many nodes
+const nodeSeparation=50
+for (let i=0; i<nodeCount; i++){
+    let size = Math.random()*30+20
+    new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined)
+}
 //region Setup
 s.tick();
