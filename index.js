@@ -337,6 +337,7 @@ class sprite {
         //remove self from the draw registered objects
         drawInd=s.draw.indexOf(this)
         if (drawInd!=-1) s.splice(drawInd,1)
+        delete this;
     }
 }
 //endregion
@@ -381,20 +382,29 @@ class node{
 }
 //region physics node
 const physicsNodes=[]
+const drawLabels = true
 class physicsNode extends node{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5){
-        super(x,y,radius,colour,z);
+        super(x,y,radius,colour,z-1);
         this.m=mass;
         //elasticity currently unused
         //would inform inelastic collisions
         this.e=elasticity;
         this.r=radius
         physicsNodes.push(this);
+        if (drawLabels) s.draw.push(this);
         //vertical and horizontal speed
         this.vsp=0
         this.hsp=0
         //velocity is divided by this each step to simulate friction
         this.frict=1.05
+    }
+    draw(){
+        ctx.font = "15px Arial";
+        ctx.fillStyle=appropriate_text_color(this.spr.colour)
+        let [x,y]=c.get(this.x,this.y)
+        ctx.fillText(physicsNodes.indexOf(this),x,y);
+        console.log("drawn")
     }
     //step is completely overwritten- base node logic not used
     step(){ //each frame
@@ -421,7 +431,7 @@ class physicsNode extends node{
         this.y+=this.vsp
         //move sprite to self in case moved
         if (this.spr.z!=this.z){
-            this.spr.z=this.z;
+            this.spr.z=this.z-1;
             s.orderDrawers();
         }
         this.spr.x=this.x;
@@ -770,6 +780,17 @@ function random_colour(){
         Math.floor(Math.random()*255)]
     )
 }
+
+/*appropriate_text_color(backgroundHex)
+INPUT: the hex code of a colour
+OUTPUT: black or white depending on which would look clearer
+*/
+function appropriate_text_color(backgroundHex){
+    const col = hex_to_dec(backgroundHex)
+    const brightness = (col[0]+col[1]+col[2])/3
+    if (brightness>150) return "#000000"
+    else return "#FFFFFF"
+}
 //endregion
 
 //region Listeners
@@ -810,7 +831,7 @@ window.addEventListener("keydown", function (event) {
 }, true);
 
 //region Test code
-const nodeCount = 10 //pre gen this many nodes
+const nodeCount = 50 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){
