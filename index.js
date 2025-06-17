@@ -19,26 +19,32 @@ const radsConvert = (2*pi/360);
 //region Debugger
 class debuggingTool{
     constructor(){
+        //creates new date object to be used to get time
         this.timer=new Date();
-
+        //frames/second: not currently calculated
         this.frameTimes=[];
         this.frameTimesLength=60;
-
+        //ms to run step events
         this.stepTimes=[];
         this.stepTimesLength=60;
         this.stepStart=this.timer.getTime();
-
+        //ms to run draw events
         this.drawTimes=[];
         this.drawTimesLength=60;
         this.drawStart=this.stepStart;
+        //draw above everything: TODO move to post draw event
         this.z=1000
     }
+    //to be run before step events
     startStep(){this.stepStart=this.timer.getTime()}
+    //to be run after all step events
     endStep(){
         this.stepTimes.push(this.timer.getTime()-this.stepStart)
         if (this.stepTimes.length>this.stepTimesLength){this.stepTimes.splice(0,1)}
     }
+    //to be run before draw events
     startDraw(){this.drawStart=this.timer.getTime()}
+    //to be run after all draw events
     endDraw(){
         this.drawTimes.push(this.timer.getTime()-this.drawStart)
         if (this.drawTimes.length>this.drawTimesLength){this.drawTimes.splice(0,1)}
@@ -75,7 +81,7 @@ class scheduler{
         this.elapsed=0; //seconds elapsed in program
         this.debugMode=true;
         this.debugger=undefined;
-        if (this.debugMode){
+        if (this.debugMode){ //create debugger if debug mode enabled
             this.debugger=new debuggingTool();
             this.draw.push(this.debugger);
         }
@@ -85,10 +91,14 @@ class scheduler{
         this.draw.sort((a,b) => a.z-b.z)
     }
 
-    tick(){
+    tick(){ //every frame
+        //reset canvas (js uses quick drying pixels)
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //run all step events
         this.runStep();
+        //run all draw events
         this.runDraw();
+        //schedule this for next frame
         window.requestAnimationFrame(this.tick) //reruns function at rate of monitor refresh rate/second
     }
 
@@ -112,7 +122,10 @@ class scheduler{
         if (this.debugMode){this.debugger.endDraw();}
     }
 }
+//create static reference to a scheduler object
 const s = new scheduler();
+//redefine that object's tick to point to the static reference
+//not quite sure why, but this prevents a crash
 s.tick=function(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     s.runStep();
@@ -176,12 +189,16 @@ class mouse{
         }
     }
 }
+//define static pointer to a mouse object 
 const m = new mouse();
 onmousemove = function(e){
+    //xRel,yRel are screen relative
     m.xRel = e.clientX;
     m.yRel = e.clientY;
+    //x,y are world space coordinates
     m.x = (m.xRel)/c.zoom + c.x;
     m.y = (m.yRel)/c.zoom + c.y;
+    //if middle clicking, move camera based on the mouse's position delta
     if (m.mb_middle){
         if (m.ox!=m.x || m.oy!=m.y){
             c.x-=(m.xRel-m.ox)/c.zoom
@@ -193,14 +210,14 @@ onmousemove = function(e){
 }
 onmousedown = function(e){
     switch (e.button){
-        case 0:
+        case 0: //LMB
             m.mb_left = true;
             m.onClick();
             break;
-        case 2:
+        case 2: //RMB
             m.mb_right = true;
             break;
-        case 1:
+        case 1: //MMB
             m.mb_middle = true;
             m.grabPoint = [m.xRel,m.yRel];
             m.ox=m.xRel;
@@ -210,13 +227,13 @@ onmousedown = function(e){
 }
 onmouseup = function(e){
     switch (e.button){
-        case 0:
+        case 0: //LMB
             m.mb_left = false;
             break;
-        case 2:
+        case 2: //RMB
             m.mb_right = false;
             break;
-        case 1:
+        case 1: //MMB
             m.mb_middle = false;
             break;
     }
@@ -294,11 +311,12 @@ class node{
         this.bbox=[radius];
         s.step.push(this);
         m.leftclickListeners.push(this);
-        m.orderClickers();
+        m.orderClickers(); //sort draw list based on z coordinates
         this.grabOffset=[0,0];
         this.grabbed=false;
     }
     step(){
+        //if being dragged by mouse, perform this logic first
         if (this.grabbed){
             if (!m.mb_left){
                 this.grabbed=false;
@@ -327,14 +345,20 @@ class physicsNode extends node{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5){
         super(x,y,radius,colour,z);
         this.m=mass;
+        //elasticity currently unused
+        //would inform inelastic collisions
         this.e=elasticity;
         this.r=radius
         physicsNodes.push(this);
+        //vertical and horizontal speed
         this.vsp=0
         this.hsp=0
+        //velocity is divided by this each step to simulate friction
         this.frict=1.05
     }
-    step(){
+    //step is completely overwritten- base node logic not used
+    step(){ //each frame
+        //if being dragged by mouse, perform this logic first
         if (this.grabbed){
             if (!m.mb_left){
                 this.grabbed=false;
@@ -343,6 +367,7 @@ class physicsNode extends node{
                 this.vsp=((m.y+this.grabOffset[1])-this.y)/5;
             }
         }
+        //adjust speed based on friction
         this.hsp/=this.frict
         this.vsp/=this.frict
 
@@ -362,11 +387,14 @@ class physicsNode extends node{
         this.spr.x=this.x;
         this.spr.y=this.y;
     }
+    //applies a force in a direction 
     force(magnitude,direction){
         normalize(direction);
         this.hsp+=direction[0]*magnitude/this.m
         this.vsp+=direction[1]*magnitude/this.m
     }
+    //gets the center of a collection of nodes
+    //currently unused
     center_of_mass(nodes){
         let xSum=0
         let ySum=0
@@ -379,6 +407,8 @@ class physicsNode extends node{
         if (massSum==0){return [this.x,this.y]}
         return [xSum/massSum,ySum/massSum];
     }
+    //returns a collection of objects that would collide
+    //if this was at position x,y
     colliders(x,y){
         let collidingObjects=[];
         for (let i=0; i<physicsNodes.length; i++){
@@ -388,13 +418,18 @@ class physicsNode extends node{
         }
         return collidingObjects;
     }
+    //returns a boolean as to whether this would touch another node at x,y
+    //choses nodes from the constant physicsNodes list
     place_meeting(x,y){
         for (let i=0; i<physicsNodes.length; i++){
             if (physicsNodes[i]!=this){
                 if (this.node_collision(x,y,physicsNodes[i])){return true;}
             }
         }
+        return false;
     }
+    //returns a boolean as to whether this would touch another node at x,y
+    //choses nodes from a provided collection
     place_meeting_nodes(x,y,nodes){
         for (let i=0; i<nodes.length; i++){
             if (nodes[i]!=this){
@@ -402,10 +437,12 @@ class physicsNode extends node{
             }
         }
     }
+    //returns whether this would collide with a specific node at x,y
     node_collision(x,y,n){
         let colliding=(Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))<n.r+this.r)
         return colliding
     }
+    //returns the euclidian distance between this and a provided node
     dist(n){
         return Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))
     }
@@ -416,17 +453,18 @@ class physicsNode extends node{
 const minArrowLength=8
 const arrowFromNodeDist=4
 class arrow{
-    constructor(parent,target=parent,colour="#000000"){
+    constructor(parent,target=parent,colour="#000000",directed=true){
         this.parent=parent;
         this.target=target;
         this.colour=colour;
         s.draw.push(this);
-        this.z=50;
+        this.z=-50; //arrows for now are just fixed depth
+        this.directed=directed; //whether arrow should have a head
     }
 
     draw(){
         if (this.parent===this.target){ //node points to itself
-
+            //incomplete so far
         } else { //node points to another node
             let dist = this.parent.dist(this.target);
             if (dist>this.parent.r+this.target.r+minArrowLength){
@@ -675,9 +713,10 @@ for (let i=0; i<nodeCount; i++){
     let size = Math.random()*30+20
     genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined))
 }
-new arrow(genNodes[0],genNodes[1],undefined)
-new arrow(genNodes[1],genNodes[2],undefined)
-new arrow(genNodes[3],genNodes[4],undefined)
-new arrow(genNodes[5],genNodes[6],undefined)
+new arrow(genNodes[0],genNodes[1],undefined,true)
+new arrow(genNodes[1],genNodes[2],undefined,true)
+new arrow(genNodes[3],genNodes[4],undefined,false)
+new arrow(genNodes[5],genNodes[6],undefined,false)
+new arrow(genNodes[7],undefined,undefined,false)
 //region Setup
 s.tick();
