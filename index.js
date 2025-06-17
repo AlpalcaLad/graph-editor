@@ -1,6 +1,6 @@
 //region Canvas setup
 var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
+var ctx = canvas.getContext("2d", {alpha:false});
 ctx.canvas.width  = window.innerWidth-25;
 ctx.canvas.height = window.innerHeight-25;
 const cw = ctx.canvas.width;
@@ -98,7 +98,9 @@ class scheduler{
 
     tick(){ //every frame
         //reset canvas (js uses quick drying pixels)
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#FFFFFF"; // without alpha
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         //run all step events
         this.runStep();
         //run all draw events
@@ -132,7 +134,9 @@ const s = new scheduler();
 //redefine that object's tick to point to the static reference
 //not quite sure why, but this prevents a crash
 s.tick=function(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#FFFFFF"; // without alpha
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     s.runStep();
     s.runDraw();
     window.requestAnimationFrame(s.tick) //reruns function at rate of monitor refresh rate/second
