@@ -156,6 +156,21 @@ class mouse{
         //object reference MUST implement the method onClick()
         //object MUST contain variables this.x,this.y.this.bbox
         this.leftclickListeners=[] 
+        //single click detection
+        this.r=0 //for arrow holding
+        this.arrowHeld=undefined
+        this.singleClicking=false
+        this.lmbTime=0
+        this.lmbTimeMax=20
+        s.step.push(this)
+    }
+    step(){
+        if (this.mb_left){
+            this.lmbTime++
+            if (this.lmbTime>this.lmbTimeMax){
+                this.singleClicking=false;
+            }
+        }
     }
     get(x,y){
         return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
@@ -174,6 +189,10 @@ class mouse{
     }
     onClick(){
         let listenersLen=this.leftclickListeners.length
+        //set single click- if still true when stop clicking
+        //single click was performed, make an arrow
+        this.singleClicking=true;
+        this.lmbTime=0;
         for (let i=0; i<listenersLen; i++){
             const obj=this.leftclickListeners[i]
             if (obj.bbox.length==1){ //circle
@@ -181,12 +200,32 @@ class mouse{
                     if (obj.onClick()) { //call on click and if true, mouse event captured
                         //if raiseSelected on, will bring selected element to the front
                         //and move the rest back accordingly
+                        this.selected=this.leftclickListeners[i] //selecting object
+                        if (this.arrowHeld!==undefined){ //if holding arrow, repoint to target
+                            this.arrowHeld.target=this.selected
+                            this.arrowHeld=undefined
+                            //arrow attached, don't allow object to be dragged
+                            this.selected=undefined
+                            break
+                        }
                         if (this.raiseSelected && listenersLen>1){this.raiseClicker(i)}
                         break //mouse event captured, stop looking
                     }
                 }
             }
         }
+        if (this.arrowHeld!==undefined){ //if holding arrow without claimant, kill it
+            this.arrowHeld.kill()
+            this.arrowHeld=undefined
+        }
+    }
+    onStopClicking(){
+        if (this.singleClicking){
+            if (this.selected !== undefined){
+                this.arrowHeld=new arrow(this.selected,this,undefined,true)
+            }
+        }
+        this.selected=undefined
     }
 }
 //define static pointer to a mouse object 
@@ -228,6 +267,7 @@ onmousedown = function(e){
 onmouseup = function(e){
     switch (e.button){
         case 0: //LMB
+            m.onStopClicking();
             m.mb_left = false;
             break;
         case 2: //RMB
@@ -450,6 +490,7 @@ class physicsNode extends node{
 //endregion
 
 //region arrows
+const arrows=[]
 const minArrowLength=8
 const arrowFromNodeDist=4
 class arrow{
@@ -458,6 +499,7 @@ class arrow{
         this.target=target;
         this.colour=colour;
         s.draw.push(this);
+        arrows.push(this)
         this.z=-50; //arrows for now are just fixed depth
         this.directed=directed; //whether arrow should have a head
     }
@@ -480,6 +522,18 @@ class arrow{
                 ctx.stroke();
             }
         }
+    }
+
+    kill(){
+        let ind = s.draw.indexOf(this)
+        if (ind!=-1){
+            s.draw.splice(ind,1)
+        }
+        ind = arrows.indexOf(this)
+        if (ind!=-1){
+            arrows.splice(ind,1)
+        }
+        delete this
     }
 }
 
@@ -705,6 +759,32 @@ window.addEventListener('contextmenu', function(ev) {
     return false;
 }, false);
 
+//keyboard inputs
+window.addEventListener("keydown", function (event) {
+    if (event.defaultPrevented) {
+        return; // Do nothing if the event was already processed
+    }
+    switch (event.key.toLowerCase()) {
+        case "z":
+            if (arrows.length>1){arrows[arrows.length-1].kill()}
+            break;
+        case "n":
+            let size = Math.random()*30+20
+            genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined))
+            break;
+        case "c":
+            break;
+        case "p":
+            break;
+
+        default:
+            return; // Quit when this doesn't handle the key event.
+    }
+  
+    // Cancel the default action to avoid it being handled twice
+    event.preventDefault();
+}, true);
+
 //region Test code
 const nodeCount = 10 //pre gen this many nodes
 const nodeSeparation=50
@@ -713,10 +793,5 @@ for (let i=0; i<nodeCount; i++){
     let size = Math.random()*30+20
     genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined))
 }
-new arrow(genNodes[0],genNodes[1],undefined,true)
-new arrow(genNodes[1],genNodes[2],undefined,true)
-new arrow(genNodes[3],genNodes[4],undefined,false)
-new arrow(genNodes[5],genNodes[6],undefined,false)
-new arrow(genNodes[7],undefined,undefined,false)
 //region Setup
 s.tick();
