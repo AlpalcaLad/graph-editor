@@ -406,8 +406,44 @@ class physicsNode extends node{
         let colliding=(Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))<n.r+this.r)
         return colliding
     }
+    dist(n){
+        return Math.sqrt(Math.pow(n.x-this.x,2)+Math.pow(n.y-this.y,2))
+    }
 }
 //endregion
+
+//region arrows
+const minArrowLength=8
+const arrowFromNodeDist=4
+class arrow{
+    constructor(parent,target=parent,colour="#000000"){
+        this.parent=parent;
+        this.target=target;
+        this.colour=colour;
+        s.draw.push(this);
+        this.z=50;
+    }
+
+    draw(){
+        if (this.parent===this.target){ //node points to itself
+
+        } else { //node points to another node
+            let dist = this.parent.dist(this.target);
+            if (dist>this.parent.r+this.target.r+minArrowLength){
+                let vec = normalize([this.target.x-this.parent.x,this.target.y-this.parent.y])
+                //console.log(vec,Math.sqrt(Math.pow(vec[0],2)+Math.pow(vec[1],2)))
+                ctx.fillStyle=this.colour;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                let [x1,y1] = c.get(this.parent.x+vec[0]*(this.parent.r+arrowFromNodeDist),this.parent.y+vec[1]*(this.parent.r+arrowFromNodeDist))
+                ctx.moveTo(x1,y1);
+                let [x2,y2] = c.get(this.target.x-vec[0]*(this.target.r+arrowFromNodeDist),this.target.y-vec[1]*(this.target.r+arrowFromNodeDist))
+                ctx.lineTo(x2,y2);
+                ctx.stroke();
+            }
+        }
+    }
+}
 
 //region Static funcs
 
@@ -574,9 +610,12 @@ INPUT: a vector like array
 OUTPUT: the array normalized as if it was a vector
 */
 function normalize(array){
+    if (array[0]==0 && array[1]==0){return normalize([Math.random(),Math.random()])}
     total=0
-    for (let i=0; i<array.length; i++){total+=abs(array[i]);}
+    for (let i=0; i<array.length; i++){total+=Math.pow(array[i],2);}
+    total=Math.sqrt(total)
     for (let i=0; i<array.length; i++){array[i]/=total;}
+    return array
 }
 
 /*hex_to_dec(hexString)
@@ -623,12 +662,22 @@ window.addEventListener("wheel", event => {
     c.zoomTo(delta)
 });
 
+window.addEventListener('contextmenu', function(ev) {
+    ev.preventDefault();
+    return false;
+}, false);
+
 //region Test code
 const nodeCount = 10 //pre gen this many nodes
 const nodeSeparation=50
+const genNodes=[]
 for (let i=0; i<nodeCount; i++){
     let size = Math.random()*30+20
-    new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined)
+    genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined))
 }
+new arrow(genNodes[0],genNodes[1],undefined)
+new arrow(genNodes[1],genNodes[2],undefined)
+new arrow(genNodes[3],genNodes[4],undefined)
+new arrow(genNodes[5],genNodes[6],undefined)
 //region Setup
 s.tick();
