@@ -493,6 +493,8 @@ class physicsNode extends node{
 const arrows=[]
 const minArrowLength=8
 const arrowFromNodeDist=4
+const headLength = 20;
+const headWidth = 6;
 class arrow{
     constructor(parent,target=parent,colour="#000000",directed=true){
         this.parent=parent;
@@ -506,7 +508,7 @@ class arrow{
 
     draw(){
         if (this.parent===this.target){ //node points to itself
-            //incomplete so far
+            //TODO self referencing nodes
         } else { //node points to another node
             let dist = this.parent.dist(this.target);
             if (dist>this.parent.r+this.target.r+minArrowLength){
@@ -518,8 +520,30 @@ class arrow{
                 let [x1,y1] = c.get(this.parent.x+vec[0]*(this.parent.r+arrowFromNodeDist),this.parent.y+vec[1]*(this.parent.r+arrowFromNodeDist))
                 ctx.moveTo(x1,y1);
                 let [x2,y2] = c.get(this.target.x-vec[0]*(this.target.r+arrowFromNodeDist),this.target.y-vec[1]*(this.target.r+arrowFromNodeDist))
-                ctx.lineTo(x2,y2);
+                if (!this.directed){ctx.lineTo(x2,y2);} 
+                else {//if directed, line shouldn't go quite as far
+                    let x3 = x2-vec[0]*headLength;
+                    let y3 = y2-vec[1]*headLength;
+                    ctx.lineTo(x3,y3);
+                }
                 ctx.stroke();
+
+                if (this.directed){
+                    //SOURCE: https://stackoverflow.com/questions/808826/drawing-an-arrow-using-html-canvas
+                    //starting a new path from the head of the arrow to one of the sides of the point
+                    ctx.beginPath();
+                    let angle = point_direction(x1,y1,x2,y2)
+                    ctx.moveTo(x2, y2);
+                    ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
+                    
+                    //path from the side point of the arrow, to the other side point
+                    ctx.lineTo(x2-headLength*Math.cos(angle+Math.PI/headWidth),y2-headLength*Math.sin(angle+Math.PI/headWidth));
+                    
+                    //path from the side point back to the tip of the arrow, and then again to the opposite side point
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
+                    ctx.fill();
+                }
             }
         }
     }
@@ -766,7 +790,7 @@ window.addEventListener("keydown", function (event) {
     }
     switch (event.key.toLowerCase()) {
         case "z":
-            if (arrows.length>1){arrows[arrows.length-1].kill()}
+            if (arrows.length>0){arrows[arrows.length-1].kill()}
             break;
         case "n":
             let size = Math.random()*30+20
