@@ -50,13 +50,18 @@ class debuggingTool{
         if (this.drawTimes.length>this.drawTimesLength){this.drawTimes.splice(0,1)}
     }
     draw(){
+        // this.frameTimes.push(this.timer.getTime())
+        // if (this.frameTimes.length>this.frameTimesLength){this.frameTimes.splice(0,1)}
         ctx.font = "15px Arial";
         ctx.fillStyle="#000000"
         if (this.stepTimes.length>0){
             ctx.fillText("Step Length (ms): "+average(this.stepTimes),10,20);
         } if (this.drawTimes.length>0){
             ctx.fillText("Draw Length (ms): "+average(this.drawTimes),10,40);
-        }
+        } 
+        // if (this.frameTimes.length>0){
+        //     ctx.fillText("Frame Time (ms): "+(this.frameTimes[this.frameTimes.length-1]-this.frameTimes[0]).toString(),10,60);
+        // }
     }
 }
 
@@ -404,7 +409,6 @@ class physicsNode extends node{
         ctx.fillStyle=appropriate_text_color(this.spr.colour)
         let [x,y]=c.get(this.x,this.y)
         ctx.fillText(physicsNodes.indexOf(this),x,y);
-        console.log("drawn")
     }
     //step is completely overwritten- base node logic not used
     step(){ //each frame
@@ -831,7 +835,7 @@ window.addEventListener("keydown", function (event) {
 }, true);
 
 //region Test code
-const nodeCount = 50 //pre gen this many nodes
+const nodeCount = 5 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){
