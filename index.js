@@ -66,12 +66,37 @@ class debuggingTool{
 }
 
 //region File Manager
+/*.graph file format:
+on each line '/' seperated:
+    NodeLabel/NodeInfo/arrows/state
+NodeLabel: Strin
+NodeInfo: variableName > value all separated by |s
+arrows: collection of arrow, separated by |
+arrow: targetNodeLabel>soundFile>soundWeight
+targetNodeLabel: String
+soundFile: String
+soundWeight: Numbe
+states: collection of state separated by |
+state: variableName > value
+*/
 class fileManager{
-    constructor(){
+    constructor(){}
+    save(filename){
+        let text = this.getFileContent()
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
 
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
     }
-    save(){
-
+    getFileContent(){
+        let text = ""
+        
     }
     load(){
         killAll()
@@ -89,23 +114,6 @@ class fileManager{
         }
     }
     process(text){
-        /*.graph file format:
-        on each line '/' seperated:
-            NodeLabel/NodeInfo/arrows/states
-
-        NodeLabel: String
-
-        NodeInfo: x|y...|r|col|z|mass (as many as the file reader wants. Standard format is just x and y), separated by |
-
-        arrows: collection of arrow, separated by >
-        arrow: targetNodeLabel|soundFile|soundWeight
-        targetNodeLabel: String
-        soundFile: String
-        soundWeight: Number
-
-        states: collection of state separated by >
-        state: variableName | value
-        */
         //two passes: load all nodes, then assign arrows to their targets
         //first pass
         const loadedNodes=[] //keep track of loaded nodes
@@ -116,12 +124,19 @@ class fileManager{
         for (const n of text.split("\n")){
             row = n.split("/")
             nodeInfo = row[1].split("|")
-            //x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined
-            const generatedNode=new physicsNode(parseInt(nodeInfo[0]),parseInt(nodeInfo[1]),50,random_colour(),loadedNodes.length,50,undefined,row[0])
+            let x = 0
+            let y = 0
+            for (const variable of nodeInfo){
+                const toSet = variable.split(">")
+                if (toSet[0]=="x") x=parseInt(toSet[1])
+                if (toSet[0]=="y") y=parseInt(toSet[1])
+            }
+            const generatedNode=new physicsNode(x,y,50,random_colour(),loadedNodes.length,50,undefined,row[0])
             loadedNodes.push(generatedNode)
             loadedNodeLabels.push(row[0])
-            for (const a of row[2].split(">")){
-                loadedArrows.push(new arrow(generatedNode,a[0],undefined,true))
+            for (const a of row[2].split("|")){
+                const aInfo = a.split(">")
+                loadedArrows.push(new arrow(generatedNode,aInfo[0],undefined,true))
             }
         }
         //second pass

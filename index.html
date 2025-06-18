@@ -6,7 +6,13 @@
     </head>
     <body>
         <p id="coords"></p>
-        <input type="file" id="input" accept=".graph"/>
+        <div>
+        <form onsubmit="f.save(this['name'].value)">
+            <input type="file" id="input" accept=".graph"/>
+            <input type="text" name="name" value="test.txt">
+            <input type="submit" value="Download">
+        </form>
+        </div>
         <canvas id="myCanvas" width="100" height="50">
         </canvas>
         <script src="index.js"></script>
