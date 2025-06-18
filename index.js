@@ -74,7 +74,7 @@ class fileManager{
 
     }
     load(){
-        //killAll()
+        killAll()
         const file = inputElement.files[0]
         const reader = new FileReader();
         reader.addEventListener(
@@ -95,7 +95,7 @@ class fileManager{
 
         NodeLabel: String
 
-        NodeInfo: x|y...|r|col|z|mass (as many as the file reader wants. Standard format is just x and y)
+        NodeInfo: x|y...|r|col|z|mass (as many as the file reader wants. Standard format is just x and y), separated by |
 
         arrows: collection of arrow, separated by >
         arrow: targetNodeLabel|soundFile|soundWeight
@@ -106,7 +106,39 @@ class fileManager{
         states: collection of state separated by >
         state: variableName | value
         */
-        for (n in text.split("/"))
+        //two passes: load all nodes, then assign arrows to their targets
+        //first pass
+        const loadedNodes=[] //keep track of loaded nodes
+        const loadedNodeLabels=[] //keep track of those labels (to repoint arrows later)
+        const loadedArrows=[] //keep track of all the arrows that need repointing
+        let row = []
+        let nodeInfo = []
+        for (const n of text.split("\n")){
+            row = n.split("/")
+            nodeInfo = row[1].split("|")
+            //x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined
+            const generatedNode=new physicsNode(parseInt(nodeInfo[0]),parseInt(nodeInfo[1]),50,random_colour(),loadedNodes.length,50,undefined,row[0])
+            loadedNodes.push(generatedNode)
+            loadedNodeLabels.push(row[0])
+            for (const a of row[2].split(">")){
+                loadedArrows.push(new arrow(generatedNode,a[0],undefined,true))
+            }
+        }
+        //second pass
+        let found=false
+        for (const a of loadedArrows){
+            found=false
+            for (let i=0; i<loadedNodeLabels.length; i++){
+                if (loadedNodeLabels[i]===a.target){
+                    a.target=loadedNodes[i];
+                    found=true
+                }
+            }
+            if (!found){ //couldn't find target node, make arrow reflexive
+                a.target=a.parent
+            }
+        }
+        //for (const x of physicsNodes){console.log(x)}
     }
 }
 const f = new fileManager()
@@ -504,8 +536,11 @@ class physicsNode extends node{
             }
         }
         //adjust speed based on friction
+        //if (abs(this.x)+abs(this.y)>10000) console.log(this.x,this.y)
         this.hsp/=this.frict
         this.vsp/=this.frict
+        if (abs(this.hsp)<0.05) this.hsp=0
+        if (abs(this.vsp)<0.05) this.vsp=0
 
         //collision and movement
         if (this.place_meeting(this.x+this.hsp,this.y+this.vsp)){
