@@ -65,6 +65,52 @@ class debuggingTool{
     }
 }
 
+//region File Manager
+class fileManager{
+    constructor(){
+
+    }
+    save(){
+
+    }
+    load(){
+        //killAll()
+        const file = inputElement.files[0]
+        const reader = new FileReader();
+        reader.addEventListener(
+            "load",
+            () => {
+                f.process(reader.result);
+            },
+            false,
+        );
+        if (file) {
+            reader.readAsText(file);
+        }
+    }
+    process(text){
+        /*.graph file format:
+        on each line '/' seperated:
+            NodeLabel/NodeInfo/arrows/states
+
+        NodeLabel: String
+
+        NodeInfo: x|y...|r|col|z|mass (as many as the file reader wants. Standard format is just x and y)
+
+        arrows: collection of arrow, separated by >
+        arrow: targetNodeLabel|soundFile|soundWeight
+        targetNodeLabel: String
+        soundFile: String
+        soundWeight: Number
+
+        states: collection of state separated by >
+        state: variableName | value
+        */
+        for (n in text.split("/"))
+    }
+}
+const f = new fileManager()
+
 //region Scheduler
 /*This object manages the scheduling of nodes etc.
 It operates using two arrays: step and draw. These are not self managed,
@@ -154,6 +200,7 @@ class mouse{
         this.mb_right=0;
         this.mb_middle=0;
         this.grabPoint = undefined;
+        this.mouseOffset=[-15,-15] //force mouse position to be top left of cursor
         //frame old x and y, to calculate delta x and y for the mouse
         this.ox=undefined;
         this.oy=undefined;
@@ -241,8 +288,8 @@ class mouse{
 const m = new mouse();
 onmousemove = function(e){
     //xRel,yRel are screen relative
-    m.xRel = e.clientX;
-    m.yRel = e.clientY;
+    m.xRel = e.clientX+m.mouseOffset[0];
+    m.yRel = e.clientY+m.mouseOffset[1];
     //x,y are world space coordinates
     m.x = (m.xRel)/c.zoom + c.x;
     m.y = (m.yRel)/c.zoom + c.y;
@@ -344,8 +391,8 @@ class sprite {
     }
     kill(){
         //remove self from the draw registered objects
-        drawInd=s.draw.indexOf(this)
-        if (drawInd!=-1) s.splice(drawInd,1)
+        let drawInd=s.draw.indexOf(this)
+        if (drawInd!=-1) s.draw.splice(drawInd,1)
         delete this;
     }
 }
@@ -364,6 +411,18 @@ class node{
         m.orderClickers(); //sort draw list based on z coordinates
         this.grabOffset=[0,0];
         this.grabbed=false;
+    }
+    kill(){
+        let ind = m.leftclickListeners.indexOf(this)
+        if (ind!=-1){
+            m.leftclickListeners.splice(ind,1)
+        }
+        ind = m.leftclickListeners.indexOf(this)
+        if (ind!=-1){
+            m.leftclickListeners.splice(ind,1)
+        }
+        this.spr.kill()
+        delete this
     }
     step(){
         //if being dragged by mouse, perform this logic first
@@ -393,7 +452,7 @@ class node{
 const physicsNodes=[]
 const drawLabels = true
 class physicsNode extends node{
-    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5){
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined){
         super(x,y,radius,colour,z-1);
         this.m=mass;
         //elasticity currently unused
@@ -407,12 +466,31 @@ class physicsNode extends node{
         this.hsp=0
         //velocity is divided by this each step to simulate friction
         this.frict=1.05
+        if (label===undefined) this.label=physicsNodes.indexOf(this)
+        else this.label=label
+    }
+    kill(){
+        let ind = physicsNodes.indexOf(this)
+        if (ind!=-1){
+            physicsNodes.splice(ind,1)
+        }
+        ind = s.draw.indexOf(this)
+        if (ind!=-1){
+            s.draw.splice(ind,1)
+        }
+        for (let i=0; i<arrows.length; i++){
+            if (arrows[i].target===this || arrows[i].parent===this){
+                arrows[i].kill()
+                i-=1
+            }
+        }
+        super.kill()
     }
     draw(){
         ctx.font = "15px Arial";
         ctx.fillStyle=appropriate_text_color(this.spr.colour)
         let [x,y]=c.get(this.x,this.y)
-        ctx.fillText(physicsNodes.indexOf(this),x,y);
+        ctx.fillText(this.label,x,y);
     }
     //step is completely overwritten- base node logic not used
     step(){ //each frame
@@ -525,6 +603,7 @@ class arrow{
     }
 
     draw(){
+        if (this.parent===undefined || this.target===undefined){this.kill()}
         if (this.parent===this.target){ //node points to itself
             //TODO self referencing nodes
         } else { //node points to another node
@@ -580,6 +659,15 @@ class arrow{
 }
 
 //region Static funcs
+
+/*killAll()
+Removes all physics nodes and attached arrows
+*/
+function killAll(){
+    while (physicsNodes.length>0){
+        physicsNodes[0].kill()
+    }
+}
 
 /* average(array)
 INPUT: An array of numbers
@@ -822,10 +910,11 @@ window.addEventListener("keydown", function (event) {
             if (arrows.length>0){arrows[arrows.length-1].kill()}
             break;
         case "n":
-            let size = Math.random()*30+20
-            genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined))
+            let size = Math.random()*20+30
+            genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined,undefined))
             break;
-        case "c":
+        case "r":
+            killAll()
             break;
         case "p":
             break;
@@ -838,13 +927,16 @@ window.addEventListener("keydown", function (event) {
     event.preventDefault();
 }, true);
 
+const inputElement = document.getElementById("input");
+inputElement.addEventListener("change", f.load, false);
+
 //region Test code
-const nodeCount = 5 //pre gen this many nodes
+const nodeCount = 10 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){
     let size = Math.random()*30+20
-    genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined))
+    genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined,undefined))
 }
 //region Setup
 s.tick();
