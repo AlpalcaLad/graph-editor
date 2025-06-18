@@ -2,7 +2,7 @@
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d", {alpha:false});
 ctx.canvas.width  = window.innerWidth-25;
-ctx.canvas.height = window.innerHeight-25;
+ctx.canvas.height = window.innerHeight-100;
 const cw = ctx.canvas.width;
 const ch = ctx.canvas.height;
 const centerx=cw/2
@@ -96,7 +96,21 @@ class fileManager{
     }
     getFileContent(){
         let text = ""
-        
+        for (const n of physicsNodes){
+            text+=n.label+"/"
+            text+="x>"+n.x.toString()
+            text+="|y>"+n.y.toString()
+            text+="/"
+            for (const a of arrows){
+                if (a.parent==n){
+                    text+=a.target.label
+                    text+=">"+"test.mp4" //REPLACE WITH ACTUAL FILE
+                    text+=">"+"14" //REPLACE WITH ACTUAL PATH WEIGHT
+                }
+            }
+            text+="\n"
+        }
+        return text
     }
     load(){
         killAll()
@@ -122,6 +136,7 @@ class fileManager{
         let row = []
         let nodeInfo = []
         for (const n of text.split("\n")){
+            if (n=="") continue
             row = n.split("/")
             nodeInfo = row[1].split("|")
             let x = 0
@@ -247,7 +262,7 @@ class mouse{
         this.mb_right=0;
         this.mb_middle=0;
         this.grabPoint = undefined;
-        this.mouseOffset=[-15,-15] //force mouse position to be top left of cursor
+        this.mouseOffset=[-5,-40] //force mouse position to be top left of cursor
         //frame old x and y, to calculate delta x and y for the mouse
         this.ox=undefined;
         this.oy=undefined;
@@ -960,7 +975,7 @@ window.addEventListener("keydown", function (event) {
             if (arrows.length>0){arrows[arrows.length-1].kill()}
             break;
         case "n":
-            let size = Math.random()*20+30
+            let size = 50//Math.random()*20+30
             genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined,undefined))
             break;
         case "r":
@@ -981,7 +996,7 @@ const inputElement = document.getElementById("input");
 inputElement.addEventListener("change", f.load, false);
 
 //region Test code
-const nodeCount = 10 //pre gen this many nodes
+const nodeCount = 0 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){
