@@ -3,3 +3,10 @@
 3. Arrows save variable states
 4. Nodes save variable states
 5. Nodes display variables as text properties
+5. Node resizing
+
+Project stuffs
+1. In project state editor
+2. Graph traversal algo
+3. Play/Pause buttons that start graph traversal
+4. Arrows play sound in traversal

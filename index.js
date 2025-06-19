@@ -107,8 +107,8 @@ class fileManager{
         let text = ""
         for (const n of physicsNodes){ //each node is a line in the output
             text+=n.label+"/" // "label/"
-            text+="x>"+n.x.toString() // "x>?
-            text+="|y>"+n.y.toString() // "|y>?"
+            text+="x>"+Math.floor(n.x).toString() // "x>?
+            text+="|y>"+Math.floor(n.y).toString() // "|y>?"
             text+="/" // "/"
             // "label/x>?|y>?/"
             for (const a of arrows){ //loop through all arrows to find relevant ones
