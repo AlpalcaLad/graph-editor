@@ -69,8 +69,9 @@ class debuggingTool{
 /*.graph file format:
 on each line '/' seperated:
     NodeLabel/NodeInfo/arrows/state
-NodeLabel: Strin
+NodeLabel: String, should be unique ID
 NodeInfo: variableName > value all separated by |s
+TODO change arrows to name>value format
 arrows: collection of arrow, separated by |
 arrow: targetNodeLabel>soundFile>soundWeight
 targetNodeLabel: String
@@ -78,11 +79,19 @@ soundFile: String
 soundWeight: Numbe
 states: collection of state separated by |
 state: variableName > value
+
+Example:
+0/x>100|y>100//
+1/x>250|y>250/0>test.mp4>14/
+2/x>450|y>350/1>test.mp4>14|0>test.mp4>14/
+3/x>350|y>650/0>test.mp4>14/
 */
 class fileManager{
     constructor(){}
     save(filename){
+        //get text to save to file as a string
         let text = this.getFileContent()
+        //create download element and simulate a click
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', filename);
@@ -96,12 +105,13 @@ class fileManager{
     }
     getFileContent(){
         let text = ""
-        for (const n of physicsNodes){
-            text+=n.label+"/"
-            text+="x>"+n.x.toString()
-            text+="|y>"+n.y.toString()
-            text+="/"
-            for (const a of arrows){
+        for (const n of physicsNodes){ //each node is a line in the output
+            text+=n.label+"/" // "label/"
+            text+="x>"+n.x.toString() // "x>?
+            text+="|y>"+n.y.toString() // "|y>?"
+            text+="/" // "/"
+            // "label/x>?|y>?/"
+            for (const a of arrows){ //loop through all arrows to find relevant ones
                 if (a.parent==n){
                     text+=a.target.label
                     text+=">"+"test.mp4" //REPLACE WITH ACTUAL FILE
@@ -113,7 +123,7 @@ class fileManager{
         return text
     }
     load(){
-        killAll()
+        killAll() //remove all current nodes before loading file
         const file = inputElement.files[0]
         const reader = new FileReader();
         reader.addEventListener(
@@ -981,7 +991,8 @@ window.addEventListener("keydown", function (event) {
         case "r":
             killAll()
             break;
-        case "p":
+        case "x":
+            if (physicsNodes.length>0){physicsNodes[physicsNodes.length-1].kill()}
             break;
 
         default:
@@ -996,7 +1007,7 @@ const inputElement = document.getElementById("input");
 inputElement.addEventListener("change", f.load, false);
 
 //region Test code
-const nodeCount = 0 //pre gen this many nodes
+const nodeCount = 5 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){

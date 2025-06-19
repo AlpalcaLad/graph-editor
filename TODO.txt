@@ -1,0 +1,5 @@
+1. Convert arrows to name>value format
+2. Arrows display variables as text properties
+3. Arrows save variable states
+4. Nodes save variable states
+5. Nodes display variables as text properties
