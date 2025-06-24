@@ -1,8 +1,7 @@
-1. Convert arrows to name>value format
-2. Arrows display variables as text properties
-3. Arrows save variable states
-4. Nodes save variable states
-5. Nodes display variables as text properties
+1. Arrows display variables as text properties
+2. Arrows save variable states
+3. Nodes save variable states
+4. Nodes display variables as text properties
 5. Node resizing
 
 Project stuffs

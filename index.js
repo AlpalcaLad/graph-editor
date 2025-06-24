@@ -70,10 +70,10 @@ class debuggingTool{
 on each line '/' seperated:
     NodeLabel/NodeInfo/arrows/state
 NodeLabel: String, should be unique ID
-NodeInfo: variableName > value all separated by |s
+NodeInfo: variableName > value all separated by |
 TODO change arrows to name>value format
-arrows: collection of arrow, separated by |
-arrow: targetNodeLabel>soundFile>soundWeight
+arrows: collection of arrow, separated by ,
+arrow: variableName > value all separated by |
 targetNodeLabel: String
 soundFile: String
 soundWeight: Numbe
@@ -105,22 +105,30 @@ class fileManager{
     }
     getFileContent(){
         let text = ""
+        let nodesDrawn=false
         for (const n of physicsNodes){ //each node is a line in the output
+            nodesDrawn=true
             text+=n.label+"/" // "label/"
             //using Math.round to prevent excessive saving of floats
             text+="x>"+Math.round(n.x).toString() // "x>?
             text+="|y>"+Math.round(n.y).toString() // "|y>?"
             text+="/" // "/"
             // "label/x>?|y>?/"
+            let arrowsDrawn=false
             for (const a of arrows){ //loop through all arrows to find relevant ones
                 if (a.parent==n){
-                    text+=a.target.label
-                    text+=">"+"test.mp4" //REPLACE WITH ACTUAL FILE
-                    text+=">"+"14" //REPLACE WITH ACTUAL PATH WEIGHT
+                    arrowsDrawn=true
+                    text+="target>"+a.target.label
+                    text+="|soundFile>"+"test.mp4" //REPLACE WITH ACTUAL FILE
+                    text+="|soundValue>"+"14" //REPLACE WITH ACTUAL PATH WEIGHT
+                    text+=","
                 }
             }
+            if (arrowsDrawn) text=text.slice(0,-1) //remove final , character
+            text+="/"
             text+="\n"
         }
+        if (nodesDrawn) text=text.slice(0,-1) //remove final \n character
         return text
     }
     load(){
@@ -160,9 +168,16 @@ class fileManager{
             const generatedNode=new physicsNode(x,y,50,random_colour(),loadedNodes.length,50,undefined,row[0])
             loadedNodes.push(generatedNode)
             loadedNodeLabels.push(row[0])
-            for (const a of row[2].split("|")){
-                const aInfo = a.split(">")
-                loadedArrows.push(new arrow(generatedNode,aInfo[0],undefined,true))
+            for (const a of row[2].split(",")){
+                if (a.length==0){continue}
+                let target=undefined;
+                for (const aInfo of a.split("|")){
+                    const variableToSet = aInfo.split(">")
+                    if (variableToSet[0]=="target"){
+                        target=variableToSet[1]
+                    }
+                }
+                loadedArrows.push(new arrow(generatedNode,target,undefined,true))
             }
         }
         //second pass
