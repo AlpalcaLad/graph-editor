@@ -4,16 +4,16 @@ constant object to provide fresh labels and IDs to verticies and edges
 */
 class manager{
     constructor(){
-        nextNodeId=-1;
-        nextEdgeId=-1;
+        this.nextNodeId=-1;
+        this.nextEdgeId=-1;
     }
     getFreshNodeId(){
-        nextNodeId++;
-        return 'V'+nextNodeId; //'V0', 'V1', 'V2'...
+        this.nextNodeId++;
+        return 'V'+this.nextNodeId; //'V0', 'V1', 'V2'...
     }
     getFreshEdgeId(){
-        nextEdgeId++;
-        return 'E'+nextEdgeId; //'E0', 'E1', 'E2'...
+        this.nextEdgeId++;
+        return 'E'+this.nextEdgeId; //'E0', 'E1', 'E2'...
     }
 }
 //constant reference to instance of manager class, to be accessed in other classes
@@ -32,11 +32,21 @@ class node{
         this.edgesOut=[];
 
         if (label==-1){
-            this.label=m.getFreshId();
+            this.label=m.getFreshNodeId();
         } else {
             this.label=label;
         }
+        //state is a dictionary of key value pairs
+        //currently these must be booleans or specific pre defined values
+        this.state = new Map();
     } 
+    //if length mismatch this could lead to an array out of bounds exception
+    defineState(keys=[],values=[]){
+        if (keys.length!=values.length){throw new Error("Keys do not match values");}
+        for (i=0; i<keys.length; i++){
+            this.state.set(keys[i],values[i]);
+        }
+    }
     //returns the merged list of edgesIn and edgesOut
     //there is no in-code force to prevent duplicates
     getAllEdges(){
@@ -73,6 +83,18 @@ class node{
             this.edgesOut[i].kill();
         }
     }
+    //turns the state into a printable string {key1:val1,key2:val2...}
+    stringifyState(){
+        let str="{"
+        this.state.forEach((key,value) => {
+            str+=key+":"+value+","
+        });
+        return str+"}"
+    }
+    //console logs a nicer representation of the node
+    print(){
+        console.log( `${this.label}, state: ${this.stringifyState(this.state)}` );
+    }
 }
 //endregion
 
@@ -89,11 +111,33 @@ class edge{
         target.addEdgeIn(this);
 
         this.label=m.getFreshEdgeId();
+
+        this.state = new Map();
     }
     //remove node from graph
     kill(){
         this.source.removeEdge(this);
         this.target.removeEdge(this);
+    }
+    //set state based on key value inputs
+    defineState(keys=[],values=[]){
+        //if length mismatch this could lead to an array out of bounds exception
+        if (keys.length!=values.length){throw new Error("Keys do not match values");}
+        for (i=0; i<keys.length; i++){
+            this.state.set(keys[i],values[i]);
+        }
+    }
+    //turns the state into a printable string {key1:val1,key2:val2...}
+    stringifyState(){
+        let str="{"
+        this.state.forEach((key,value) => {
+            str+=key+":"+value+","
+        });
+        return str+"}"
+    }
+    //console logs a nicer representation of the edge
+    print(){
+        console.log( `${this.label}, connecting: (${this.source.label},${this.target.label}), state: ${this.stringifyState(this.state)}` );
     }
 }
 //endregion
@@ -105,4 +149,24 @@ class graph{
         this.edges=edges;
     }  
 }
+//endregion
+
+
+//region Functions
+
+//endregion
+
+
+//region Test Code
+testNodes=[
+    new node(),
+    new node(),
+    new node()
+];
+testEdges=[
+    new edge(testNodes[0],testNodes[1]),
+    new edge(testNodes[1],testNodes[2])
+];
+
+testNodes[0].print();
 //endregion
