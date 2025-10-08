@@ -43,7 +43,7 @@ class node{
     //if length mismatch this could lead to an array out of bounds exception
     defineState(keys=[],values=[]){
         if (keys.length!=values.length){throw new Error("Keys do not match values");}
-        for (i=0; i<keys.length; i++){
+        for (let i=0; i<keys.length; i++){
             this.state.set(keys[i],values[i]);
         }
     }
@@ -76,10 +76,10 @@ class node{
     }
     //remove node and destroy any connected edges
     kill(){
-        for (i=0; i<this.edgesIn.length; i++){
+        for (let i=0; i<this.edgesIn.length; i++){
             this.edgesIn[i].kill();
         }
-        for (i=0; i<this.edgesOut.length; i++){
+        for (let i=0; i<this.edgesOut.length; i++){
             this.edgesOut[i].kill();
         }
     }
@@ -94,8 +94,9 @@ class node{
     //turn edges into a printable string
     stringifyEdges(){
         let str="{"
-        for (i=0; i<this.edgesOut.length; i++){
-            str+=this.edgesOut[i].target.label+",";
+        for (let i=0; i<this.edgesOut.length; i++){
+            str+=this.edgesOut[i].target.label;
+            if (i<this.edgesOut.length-1) str+=","
         }
         str+="}"
         return str
@@ -132,7 +133,7 @@ class edge{
     defineState(keys=[],values=[]){
         //if length mismatch this could lead to an array out of bounds exception
         if (keys.length!=values.length){throw new Error("Keys do not match values");}
-        for (i=0; i<keys.length; i++){
+        for (let i=0; i<keys.length; i++){
             this.state.set(keys[i],values[i]);
         }
     }
@@ -158,7 +159,8 @@ class graph{
         this.edges=edges;
     }  
     printAll(){
-        for (i=0; i<this.verticies.length; i++){
+        console.log("Graph Contents:")
+        for (let i=0; i<this.verticies.length; i++){
             console.log(this.verticies[i].print());
         }
     }
@@ -167,7 +169,24 @@ class graph{
 
 
 //region Functions
-
+function isPathPossible(graph,node1,node2){
+    //depth first search for node
+    let unexplored=[node1];
+    let explored=[];
+    let n;
+    let n2;
+    while (unexplored.length>0){
+        n = unexplored.pop();
+        explored.push(n);
+        if (n==node2) return true;
+        for (let i=0; i<n.edgesOut.length; i++){
+            n2=n.edgesOut[i].target;
+            if (n2==node2) return true;
+            if (!explored.includes(n2) && !unexplored.includes(n2)) unexplored.push(n2);
+        }
+    }
+    return false;
+}
 //endregion
 
 
@@ -179,12 +198,12 @@ function templateNode(inNodes=[],outNodes=[],label=-1){
     let n = new node(label=label);
     testNodes.push(n);
     let e;
-    for (i=0; i<inNodes.length; i++){
+    for (let i=0; i<inNodes.length; i++){
         e = new edge(inNodes[i],n);
         testEdges.push(e);
         n.addEdgeIn(e);
     }
-    for (i=0; i<outNodes.length; i++){
+    for (let i=0; i<outNodes.length; i++){
         e = new edge(n,outNodes[i]);
         testEdges.push(e);
         n.addEdgeOut(e);
@@ -195,4 +214,5 @@ templateNode();
 templateNode([testNodes[0]]);
 templateNode([testNodes[1]]);
 g.printAll();
+console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
 //endregion
