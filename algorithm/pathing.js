@@ -91,9 +91,18 @@ class node{
         });
         return str+"}"
     }
+    //turn edges into a printable string
+    stringifyEdges(){
+        let str="{"
+        for (i=0; i<this.edgesOut.length; i++){
+            str+=this.edgesOut[i].target.label+",";
+        }
+        str+="}"
+        return str
+    }
     //console logs a nicer representation of the node
     print(){
-        console.log( `${this.label}, state: ${this.stringifyState(this.state)}` );
+        return `${this.label}, edges: ${this.stringifyEdges()}, state: ${this.stringifyState()}`;
     }
 }
 //endregion
@@ -137,7 +146,7 @@ class edge{
     }
     //console logs a nicer representation of the edge
     print(){
-        console.log( `${this.label}, connecting: (${this.source.label},${this.target.label}), state: ${this.stringifyState(this.state)}` );
+        return `${this.label}, connecting: (${this.source.label},${this.target.label}), state: ${this.stringifyState()}`;
     }
 }
 //endregion
@@ -148,6 +157,11 @@ class graph{
         this.verticies=verticies;
         this.edges=edges;
     }  
+    printAll(){
+        for (i=0; i<this.verticies.length; i++){
+            console.log(this.verticies[i].print());
+        }
+    }
 }
 //endregion
 
@@ -158,15 +172,27 @@ class graph{
 
 
 //region Test Code
-testNodes=[
-    new node(),
-    new node(),
-    new node()
-];
-testEdges=[
-    new edge(testNodes[0],testNodes[1]),
-    new edge(testNodes[1],testNodes[2])
-];
-
-testNodes[0].print();
+const testNodes=[];
+const testEdges=[];
+const g = new graph(testNodes,testEdges);
+function templateNode(inNodes=[],outNodes=[],label=-1){
+    let n = new node(label=label);
+    testNodes.push(n);
+    let e;
+    for (i=0; i<inNodes.length; i++){
+        e = new edge(inNodes[i],n);
+        testEdges.push(e);
+        n.addEdgeIn(e);
+    }
+    for (i=0; i<outNodes.length; i++){
+        e = new edge(n,outNodes[i]);
+        testEdges.push(e);
+        n.addEdgeOut(e);
+    }
+    return n
+}
+templateNode();
+templateNode([testNodes[0]]);
+templateNode([testNodes[1]]);
+g.printAll();
 //endregion
