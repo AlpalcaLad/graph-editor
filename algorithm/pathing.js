@@ -169,18 +169,27 @@ class graph{
 
 
 //region Functions
-function isPathPossible(graph,node1,node2){
+//find path (length>0) from source to target nodes
+//return true if one exists, false otherwise
+function isPathPossible(graph,node1,node2){ 
     //depth first search for node
     let unexplored=[node1];
     let explored=[];
+    //two temporary node variables
     let n;
     let n2;
+    //until we've explored every path
     while (unexplored.length>0){
+        //get next node from stack
         n = unexplored.pop();
+        //mark node as explored
         explored.push(n);
+        //return out if target found
         if (n==node2) return true;
+        //add each edge to the stack
         for (let i=0; i<n.edgesOut.length; i++){
             n2=n.edgesOut[i].target;
+            //return out if target found
             if (n2==node2) return true;
             if (!explored.includes(n2) && !unexplored.includes(n2)) unexplored.push(n2);
         }
