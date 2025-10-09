@@ -204,32 +204,44 @@ function booleanToInt(bool){
     if (bool) return 1
     else return -1
 }
+//find the difference between the states of node1 and node2, between 0 (identical), 1 (opposites)
+//sqrt ( (1st diff)^2 + (2nd diff)^2 ... ), ie pythagorian distance
+//this is safe for undefined states using booleanToInt, but all states must be of type boolean||undefined
 function booleanDistance(node1,node2){
     //Calculate the distance between two node's states
     let summedDistance=0;
     //create an array with all distinct keys in either node's state
     let allKeys = [...new Set([...node1.state.keys(), ...node2.state.keys()])] //SOURCE: https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
-    for (let i=0; i<allKeys.length; i++){
+    for (let i=0; i<allKeys.length; i++){ //compare each key individually
         summedDistance+=Math.pow(
             booleanToInt(node1.state.get(allKeys[i]))
             -booleanToInt(node2.state.get(allKeys[i]))
         ,2)
     }
-    return Math.sqrt(summedDistance)
+    let unnormalizedDist = Math.sqrt(summedDistance)
+    //normalize to be between 0,1 by dividing by the largest possible distance
+    return unnormalizedDist / (2*Math.sqrt(allKeys.length))
 }
+//find the state with the smallest boolean distance to the target
 function closestBooleanState(nodes,target,returnIndex=false){
+    //safety check for empty node array
     if (nodes.length == 0) throw new Error("Empty nodes array, cannot compare")
+    //initialise best tracker
     let bestValue=-1;
     let bestIndex=0;
+    //initialise variable to hold the distance of each node
     let tempDist;
-    for (let i=0; i<nodes.length; i++){
+    for (let i=0; i<nodes.length; i++){ //check each node sequentially
         tempDist = booleanDistance(nodes[i],target);
-        if (bestValue==-1 || bestValue>tempDist){
+        if (bestValue==-1 || bestValue>tempDist){ //if better (or first value, detected by bestValue==-1)
+            //update to reflect new best distance found
             bestValue=tempDist;
             bestIndex=i;
         }
     }
+    //returnIndex is an optional param to return the index in the array rather than the node
     if (returnIndex) return bestIndex
+    //by default return the node object
     else return nodes[bestIndex]
 }
 //endregion
@@ -259,7 +271,8 @@ function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],
 templateNode();
 templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff","isDead"],stateVars=[true,false]);
 templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
+templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
 g.printAll();
 console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
-booleanDistance(testNodes[1],testNodes[2])
+console.log(booleanDistance(testNodes[1],testNodes[2]))
 //endregion
