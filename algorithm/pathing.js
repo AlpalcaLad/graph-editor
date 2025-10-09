@@ -86,7 +86,7 @@ class node{
     //turns the state into a printable string {key1:val1,key2:val2...}
     stringifyState(){
         let str="{"
-        this.state.forEach((key,value) => {
+        this.state.forEach((value,key) => {
             str+=key+":"+value+","
         });
         return str+"}"
@@ -198,6 +198,40 @@ function isPathPossible(graph,node1,node2){
     }
     return false;
 }
+//map a boolean to -1 (false), 0 (undefined), 1 (true)
+function booleanToInt(bool){
+    if (bool === undefined) return 0
+    if (bool) return 1
+    else return -1
+}
+function booleanDistance(node1,node2){
+    //Calculate the distance between two node's states
+    let summedDistance=0;
+    //create an array with all distinct keys in either node's state
+    let allKeys = [...new Set([...node1.state.keys(), ...node2.state.keys()])] //SOURCE: https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+    for (let i=0; i<allKeys.length; i++){
+        summedDistance+=Math.pow(
+            booleanToInt(node1.state.get(allKeys[i]))
+            -booleanToInt(node2.state.get(allKeys[i]))
+        ,2)
+    }
+    return Math.sqrt(summedDistance)
+}
+function closestBooleanState(nodes,target,returnIndex=false){
+    if (nodes.length == 0) throw new Error("Empty nodes array, cannot compare")
+    let bestValue=-1;
+    let bestIndex=0;
+    let tempDist;
+    for (let i=0; i<nodes.length; i++){
+        tempDist = booleanDistance(nodes[i],target);
+        if (bestValue==-1 || bestValue>tempDist){
+            bestValue=tempDist;
+            bestIndex=i;
+        }
+    }
+    if (returnIndex) return bestIndex
+    else return nodes[bestIndex]
+}
 //endregion
 
 
@@ -207,7 +241,7 @@ const testEdges=[];
 const g = new graph(testNodes,testEdges);
 function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
     let n = new node(label=label);
-    //if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
+    if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
     testNodes.push(n);
     let e;
     for (let i=0; i<inNodes.length; i++){
@@ -223,8 +257,9 @@ function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],
     return n
 }
 templateNode();
-templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff"],stateVars=[true]);
-templateNode(inNodes=[testNodes[1]]);
+templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff","isDead"],stateVars=[true,false]);
+templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
 g.printAll();
 console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
+booleanDistance(testNodes[1],testNodes[2])
 //endregion
