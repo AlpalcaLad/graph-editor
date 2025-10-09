@@ -115,9 +115,11 @@ edge class for edges of graph connecting verticies. These cannot be given a uniq
 class edge{
     constructor(source,target){
         this.source=source;
+        if (!source instanceof node) throw new Error("Source is not of type 'node'")
         source.addEdgeOut(this);
 
         this.target=target;
+        if (!target instanceof node) throw new Error("Target is not of type 'node'")
         target.addEdgeIn(this);
 
         this.label=m.getFreshEdgeId();
@@ -203,8 +205,9 @@ function isPathPossible(graph,node1,node2){
 const testNodes=[];
 const testEdges=[];
 const g = new graph(testNodes,testEdges);
-function templateNode(inNodes=[],outNodes=[],label=-1){
+function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
     let n = new node(label=label);
+    //if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
     testNodes.push(n);
     let e;
     for (let i=0; i<inNodes.length; i++){
@@ -220,8 +223,8 @@ function templateNode(inNodes=[],outNodes=[],label=-1){
     return n
 }
 templateNode();
-templateNode([testNodes[0]]);
-templateNode([testNodes[1]]);
+templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff"],stateVars=[true]);
+templateNode(inNodes=[testNodes[1]]);
 g.printAll();
 console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
 //endregion
