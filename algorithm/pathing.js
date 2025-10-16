@@ -245,9 +245,30 @@ function closestBooleanState(nodes,target,returnIndex=false){
     else return nodes[bestIndex];
 }
 /*
-
+Path Valuation
+Sum of path costs, sum of node distances along path, length, sum of path use counts
 
 */
+
+function pathValuation(path, graph, targetState=new Node(), targetLength=5){
+    //calculate value factors
+    //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
+    //sum of path costs
+    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0);
+
+    //sum of node distances
+    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0);
+
+    //length (naively assume number of edges)
+    let length = path.length;
+
+    //sum of path use counts
+    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0);
+
+    //apply formula (currently very very naive)
+    return 1/Math.abs(targetLength-length)/distances/uses/costs
+}
+
 //endregion
 
 
@@ -285,5 +306,6 @@ console.log(booleanDistance(testNodes[1],testNodes[2]))
 //region Sources
 /*
 https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
 */
 //endregion
