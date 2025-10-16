@@ -225,7 +225,7 @@ function booleanDistance(node1,node2){
 //find the state with the smallest boolean distance to the target
 function closestBooleanState(nodes,target,returnIndex=false){
     //safety check for empty node array
-    if (nodes.length == 0) throw new Error("Empty nodes array, cannot compare")
+    if (nodes.length == 0) throw new Error("Empty nodes array, cannot compare");
     //initialise best tracker
     let bestValue=-1;
     let bestIndex=0;
@@ -240,10 +240,14 @@ function closestBooleanState(nodes,target,returnIndex=false){
         }
     }
     //returnIndex is an optional param to return the index in the array rather than the node
-    if (returnIndex) return bestIndex
+    if (returnIndex) return bestIndex;
     //by default return the node object
-    else return nodes[bestIndex]
+    else return nodes[bestIndex];
 }
+/*
+
+
+*/
 //endregion
 
 
@@ -275,4 +279,11 @@ templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff",
 g.printAll();
 console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
 console.log(booleanDistance(testNodes[1],testNodes[2]))
+//endregion
+
+
+//region Sources
+/*
+https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+*/
 //endregion

@@ -1001,7 +1001,7 @@ window.addEventListener("keydown", function (event) {
             if (arrows.length>0){arrows[arrows.length-1].kill()}
             break;
         case "n":
-            let size = 50//Math.random()*20+30
+            let size = 45//Math.random()*20+30
             genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined,undefined))
             break;
         case "r":
@@ -1027,7 +1027,7 @@ const nodeCount = 5 //pre gen this many nodes
 const nodeSeparation=50
 const genNodes=[]
 for (let i=0; i<nodeCount; i++){
-    let size = Math.random()*30+20
+    let size = 45//Math.random()*30+20
     genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined,undefined))
 }
 //region Setup
