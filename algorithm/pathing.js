@@ -279,34 +279,37 @@ function pathValuation(path, graph, targetState=new Node(label=-1)){
 
 
 //region Test Code
-const testNodes=[];
-const testEdges=[];
-const g = new graph(testNodes,testEdges);
-function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
-    let n = new node(label=label);
-    if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
-    testNodes.push(n);
-    let e;
-    for (let i=0; i<inNodes.length; i++){
-        e = new edge(inNodes[i],n);
-        testEdges.push(e);
-        n.addEdgeIn(e);
+function testCode(){
+    const testNodes=[];
+    const testEdges=[];
+    const g = new graph(testNodes,testEdges);
+    function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
+        let n = new node(label=label);
+        if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
+        testNodes.push(n);
+        let e;
+        for (let i=0; i<inNodes.length; i++){
+            e = new edge(inNodes[i],n);
+            testEdges.push(e);
+            n.addEdgeIn(e);
+        }
+        for (let i=0; i<outNodes.length; i++){
+            e = new edge(n,outNodes[i]);
+            testEdges.push(e);
+            n.addEdgeOut(e);
+        }
+        return n
     }
-    for (let i=0; i<outNodes.length; i++){
-        e = new edge(n,outNodes[i]);
-        testEdges.push(e);
-        n.addEdgeOut(e);
-    }
-    return n
+    templateNode();
+    templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff","isDead"],stateVars=[true,false]);
+    templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
+    templateNode(inNodes=[testNodes[1]],outNodes=[testNodes[0]],stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
+    g.printAll();
+    console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[1]],g,testNodes[0]));
+    console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[2],testEdges[3]],g,testNodes[0]));
+    console.log(booleanDistance(testNodes[1],testNodes[2]))
 }
-templateNode();
-templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff","isDead"],stateVars=[true,false]);
-templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
-templateNode(inNodes=[testNodes[1]],outNodes=[testNodes[0]],stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
-g.printAll();
-console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[1]],g,testNodes[0]));
-console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[2],testEdges[3]],g,testNodes[0]));
-console.log(booleanDistance(testNodes[1],testNodes[2]))
+testCode();
 //endregion
 
 
