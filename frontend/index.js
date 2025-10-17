@@ -188,14 +188,15 @@ class fileManager{
                 for (const aInfo of a.split("|")){
                     const variableToSet = aInfo.split(">");
                     if (variableToSet[0]=="target"){
-                        target=loadedNodes[variableToSet[1]];
+                        target=variableToSet[1];
                     } else {
                         if (variableToSet[1]=="true") {variableToSet[1]==true;}
                         if (variableToSet[1]=="false") {variableToSet[1]==false;}
                         state.set(variableToSet[0],variableToSet[1]);
                     }
                 }
-                loadedArrows.push(new arrow(generatedNode,target,undefined,true,state));
+                if (target==undefined) continue
+                new arrow(generatedNode,target,undefined,true,state);
                 //console.log(loadedArrows[loadedArrows.length-1])
             }
         }
@@ -1059,19 +1060,20 @@ function processAlgorithm(){
     const algoEdges=[];
     let tempNode;
     let tempEdge;
-    try{
-        for (let i=0; i<loadedNodes.length; i++){
-            tempNode = new Node(label=-1)
-            tempNode.defineState(loadedNodes[i].state)
-            algoNodes.push(tempNode)
-        }
-        for (let i=0; i<loadedArrows; i++){
-
-        }
-        const algoGraph = new graph(algoNodes,algoEdges);
-        console.log(algoGraph.printAll())
-    } catch{
-        throw new Error("Error: problem calling algorithm")
+    for (let i=0; i<loadedNodes.length; i++){
+        tempNode = new Node(label=-1)
+        tempNode.state=loadedNodes[i].state;
+        algoNodes.push(tempNode)
     }
+    for (let i=0; i<loadedArrows.length; i++){
+        let src = loadedNodes.indexOf(loadedArrows[i].parent)
+        let trg = loadedNodes.indexOf(loadedArrows[i].target)
+        tempEdge = new edge(
+            algoNodes[src],
+            algoNodes[trg]
+        )
+    }
+    const algoGraph = new graph(algoNodes,algoEdges);
+    console.log(algoGraph.printAll())
 }
 //endregion
