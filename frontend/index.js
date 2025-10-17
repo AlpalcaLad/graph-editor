@@ -67,8 +67,8 @@ class debuggingTool{
 
 //region File Manager
 /*.graph file format:
-on each line '/' seperated:
-    NodeLabel/NodeInfo/arrows/state
+on each line '~' seperated:
+    NodeLabel~state~arrows
 NodeLabel: String, should be unique ID
 NodeInfo: variableName > value all separated by |
 TODO change arrows to name>value format
@@ -81,11 +81,13 @@ states: collection of state separated by |
 state: variableName > value
 
 Example:
-0/x>100|y>100//
-1/x>250|y>250/0>test.mp4>14/
-2/x>450|y>350/1>test.mp4>14|0>test.mp4>14/
-3/x>350|y>650/0>test.mp4>14/
+0~x>100|y>100~~
+1~x>250|y>250~0>test.mp4>14~
+2~x>450|y>350~1>test.mp4>14|0>test.mp4>14~
+3~x>350|y>650~0>test.mp4>14~
 */
+const loadedNodes=[];
+const loadedArrows=[];
 class fileManager{
     constructor(){}
     save(filename){
@@ -108,24 +110,28 @@ class fileManager{
         let nodesDrawn=false
         for (const n of physicsNodes){ //each node is a line in the output
             nodesDrawn=true
-            text+=n.label+"/" // "label/"
+            text+=n.label+"~" // "label~"
             //using Math.round to prevent excessive saving of floats
             text+="x>"+Math.round(n.x).toString() // "x>?
             text+="|y>"+Math.round(n.y).toString() // "|y>?"
-            text+="/" // "/"
+            text+="~" // "/"
             // "label/x>?|y>?/"
             let arrowsDrawn=false
-            for (const a of arrows){ //loop through all arrows to find relevant ones
+            for (const a of loadedArrows){ //loop through all arrows to find relevant ones
                 if (a.parent==n){
                     arrowsDrawn=true
                     text+="target>"+a.target.label
-                    text+="|soundFile>"+"test.mp4" //REPLACE WITH ACTUAL FILE
-                    text+="|soundValue>"+"14" //REPLACE WITH ACTUAL PATH WEIGHT
+                    if (a.state!==undefined){
+                        let key;
+                        for (let i=0; i<a.state.keys.length || 0; i++){
+                            key = a.state.keys[i];
+                            text+="|"+key+">"+a.state.get(key).toString()
+                        }
+                    }
                     text+=","
                 }
             }
             if (arrowsDrawn) text=text.slice(0,-1) //remove final , character
-            text+="/"
             text+="\n"
         }
         if (nodesDrawn) text=text.slice(0,-1) //remove final \n character
@@ -149,35 +155,48 @@ class fileManager{
     process(text){
         //two passes: load all nodes, then assign arrows to their targets
         //first pass
-        const loadedNodes=[] //keep track of loaded nodes
+        loadedNodes.length=0 //keep track of loaded nodes
         const loadedNodeLabels=[] //keep track of those labels (to repoint arrows later)
-        const loadedArrows=[] //keep track of all the arrows that need repointing
+        loadedArrows.length=0 //keep track of all the arrows that need repointing
         let row = []
         let nodeInfo = []
         for (const n of text.split("\n")){
             if (n=="") continue
-            row = n.split("/")
+            row = n.split("~")
             nodeInfo = row[1].split("|")
             let x = 0
             let y = 0
+            let state;
+            state = new Map();
             for (const variable of nodeInfo){
-                const toSet = variable.split(">")
-                if (toSet[0]=="x") x=parseInt(toSet[1])
-                if (toSet[0]=="y") y=parseInt(toSet[1])
+                const toSet = variable.split(">");
+                if (toSet[0]=="x") x=parseInt(toSet[1]);
+                else if (toSet[0]=="y") y=parseInt(toSet[1]);
+                else{
+                    if (toSet[1]=="true") {toSet[1]==true;}
+                    if (toSet[1]=="false") {toSet[1]==false;}
+                    state.set(toSet[0],toSet[1]);
+                }
             }
-            const generatedNode=new physicsNode(x,y,50,random_colour(),loadedNodes.length,50,undefined,row[0])
-            loadedNodes.push(generatedNode)
-            loadedNodeLabels.push(row[0])
+            const generatedNode=new physicsNode(x,y,50,random_colour(),loadedNodes.length,50,undefined,row[0],state);
+            loadedNodes.push(generatedNode);
+            loadedNodeLabels.push(row[0]);
             for (const a of row[2].split(",")){
-                if (a.length==0){continue}
+                if (a.length==0){continue;}
                 let target=undefined;
+                state = new Map();
                 for (const aInfo of a.split("|")){
-                    const variableToSet = aInfo.split(">")
+                    const variableToSet = aInfo.split(">");
                     if (variableToSet[0]=="target"){
-                        target=variableToSet[1]
+                        target=loadedNodes[variableToSet[1]];
+                    } else {
+                        if (variableToSet[1]=="true") {variableToSet[1]==true;}
+                        if (variableToSet[1]=="false") {variableToSet[1]==false;}
+                        state.set(variableToSet[0],variableToSet[1]);
                     }
                 }
-                loadedArrows.push(new arrow(generatedNode,target,undefined,true))
+                loadedArrows.push(new arrow(generatedNode,target,undefined,true,state));
+                //console.log(loadedArrows[loadedArrows.length-1])
             }
         }
         //second pass
@@ -488,7 +507,7 @@ class sprite {
 
 //region node base class 
 class node{
-    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0){
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,state=undefined){
         this.spr = new sprite("c",[radius],this,colour,x,y,z);
         this.x=x;
         this.y=y;
@@ -499,6 +518,7 @@ class node{
         m.orderClickers(); //sort draw list based on z coordinates
         this.grabOffset=[0,0];
         this.grabbed=false;
+        this.state=state;
     }
     kill(){
         let ind = m.leftclickListeners.indexOf(this)
@@ -540,8 +560,8 @@ class node{
 const physicsNodes=[]
 const drawLabels = true
 class physicsNode extends node{
-    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined){
-        super(x,y,radius,colour,z-1);
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined,state=undefined){
+        super(x,y,radius,colour,z-1,state);
         this.m=mass;
         //elasticity currently unused
         //would inform inelastic collisions
@@ -566,9 +586,9 @@ class physicsNode extends node{
         if (ind!=-1){
             s.draw.splice(ind,1)
         }
-        for (let i=0; i<arrows.length; i++){
-            if (arrows[i].target===this || arrows[i].parent===this){
-                arrows[i].kill()
+        for (let i=0; i<loadedArrows.length; i++){
+            if (loadedArrows[i].target===this || loadedArrows[i].parent===this){
+                loadedArrows[i].kill()
                 i-=1
             }
         }
@@ -677,20 +697,20 @@ class physicsNode extends node{
 //endregion
 
 //region arrows
-const arrows=[]
 const minArrowLength=8
 const arrowFromNodeDist=4
 const headLength = 20;
 const headWidth = 6;
 class arrow{
-    constructor(parent,target=parent,colour="#000000",directed=true){
+    constructor(parent,target=parent,colour="#000000",directed=true,state=undefined){
         this.parent=parent;
         this.target=target;
         this.colour=colour;
         s.draw.push(this);
-        arrows.push(this)
+        loadedArrows.push(this)
         this.z=-50; //arrows for now are just fixed depth
         this.directed=directed; //whether arrow should have a head
+        this.state=state;
     }
 
     draw(){
@@ -741,9 +761,9 @@ class arrow{
         if (ind!=-1){
             s.draw.splice(ind,1)
         }
-        ind = arrows.indexOf(this)
+        ind = loadedArrows.indexOf(this)
         if (ind!=-1){
-            arrows.splice(ind,1)
+            loadedArrows.splice(ind,1)
         }
         delete this
     }
@@ -998,11 +1018,11 @@ window.addEventListener("keydown", function (event) {
     }
     switch (event.key.toLowerCase()) {
         case "z":
-            if (arrows.length>0){arrows[arrows.length-1].kill()}
+            if (loadedArrows.length>0){loadedArrows[loadedArrows.length-1].kill()}
             break;
         case "n":
             let size = 45//Math.random()*20+30
-            genNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined,undefined))
+            loadedNodes.push(new physicsNode(m.x,m.y,size,random_colour(),physicsNodes.length,size,undefined,undefined))
             break;
         case "r":
             killAll()
@@ -1025,10 +1045,33 @@ inputElement.addEventListener("change", f.load, false);
 //region Test code
 const nodeCount = 5 //pre gen this many nodes
 const nodeSeparation=50
-const genNodes=[]
 for (let i=0; i<nodeCount; i++){
     let size = 45//Math.random()*30+20
-    genNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined,undefined))
+    loadedNodes.push(new physicsNode(500+Math.random()*nodeSeparation-nodeSeparation,500+Math.random()*nodeSeparation-nodeSeparation,size,random_colour(),i,size,undefined,undefined))
 }
 //region Setup
 s.tick();
+//endregion
+
+//region Algorithm
+function processAlgorithm(){
+    const algoNodes=[];
+    const algoEdges=[];
+    let tempNode;
+    let tempEdge;
+    try{
+        for (let i=0; i<loadedNodes.length; i++){
+            tempNode = new Node(label=-1)
+            tempNode.defineState(loadedNodes[i].state)
+            algoNodes.push(tempNode)
+        }
+        for (let i=0; i<loadedArrows; i++){
+
+        }
+        const algoGraph = new graph(algoNodes,algoEdges);
+        console.log(algoGraph.printAll())
+    } catch{
+        throw new Error("Error: problem calling algorithm")
+    }
+}
+//endregion

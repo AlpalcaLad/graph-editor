@@ -17,7 +17,7 @@ class manager{
     }
 }
 //constant reference to instance of manager class, to be accessed in other classes
-const m=new manager(); 
+const man=new manager(); 
 //endregion
 
 //region Node
@@ -25,14 +25,14 @@ const m=new manager();
 node class for verticies of graph. Optional argument label to force a specific name for a vertex, otherwise uses getFreshNodeId
 These labels should be unique but this is not enforced by code.
 */
-class node{
+class Node{
     constructor(label=-1){
         //initialise node edges to be empty arrays
         this.edgesIn=[];
         this.edgesOut=[];
 
         if (label==-1){
-            this.label=m.getFreshNodeId();
+            this.label=man.getFreshNodeId();
         } else {
             this.label=label;
         }
@@ -115,14 +115,14 @@ edge class for edges of graph connecting verticies. These cannot be given a uniq
 class edge{
     constructor(source,target){
         this.source=source;
-        if (!source instanceof node) throw new Error("Source is not of type 'node'")
+        if (!source instanceof Node) throw new Error("Source is not of type 'node'")
         source.addEdgeOut(this);
 
         this.target=target;
-        if (!target instanceof node) throw new Error("Target is not of type 'node'")
+        if (!target instanceof Node) throw new Error("Target is not of type 'node'")
         target.addEdgeIn(this);
 
-        this.label=m.getFreshEdgeId();
+        this.label=man.getFreshEdgeId();
 
         this.state = new Map();
     }
@@ -284,7 +284,7 @@ function testCode(){
     const testEdges=[];
     const g = new graph(testNodes,testEdges);
     function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
-        let n = new node(label=label);
+        let n = new Node(label=label);
         if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
         testNodes.push(n);
         let e;
@@ -309,7 +309,7 @@ function testCode(){
     console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[2],testEdges[3]],g,testNodes[0]));
     console.log(booleanDistance(testNodes[1],testNodes[2]))
 }
-testCode();
+//testCode();
 //endregion
 
 

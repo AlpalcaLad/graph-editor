@@ -7,14 +7,16 @@
     <body>
         <p id="coords"></p>
         <div>
-        <form onsubmit="event.preventDefault(); f.save(this['name'].value)">
+        <form onsubmit="event.preventDefault(); f.save(this['name'].value);">
             <input type="file" id="input" accept=".graph"/>
             <input type="text" name="name" value="test.graph">
             <input type="submit" id="output" value="Download">
         </form>
+        <form onsubmit="event.preventDefault(); processAlgorithm();"><input type="submit" id="algo" value="Test Algo"></form>
         </div>
         <canvas id="myCanvas" width="100" height="100">
         </canvas>
+        <script src="../algorithm/pathing.js"></script>
         <script src="index.js"></script>
     </body>
 </html>
