@@ -161,9 +161,13 @@ class graph{
         this.edges=edges;
     }  
     printAll(){
-        console.log("Graph Contents:")
+        console.log("Graph Nodes:")
         for (let i=0; i<this.verticies.length; i++){
             console.log(this.verticies[i].print());
+        }
+        console.log("Graph Edges:")
+        for (let i=0; i<this.edges.length; i++){
+            console.log(this.edges[i].print());
         }
     }
 }
@@ -212,6 +216,7 @@ function booleanDistance(node1,node2){
     let summedDistance=0;
     //create an array with all distinct keys in either node's state
     let allKeys = [...new Set([...node1.state.keys(), ...node2.state.keys()])] //SOURCE: https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+    if (allKeys.length==0) return 0
     for (let i=0; i<allKeys.length; i++){ //compare each key individually
         summedDistance+=Math.pow(
             booleanToInt(node1.state.get(allKeys[i]))
@@ -250,23 +255,24 @@ Sum of path costs, sum of node distances along path, length, sum of path use cou
 
 */
 
-function pathValuation(path, graph, targetState=new Node(), targetLength=5){
+function pathValuation(path, graph, targetState=new Node(label=-1)){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
-    //sum of path costs
-    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0);
-
-    //sum of node distances
-    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0);
-
     //length (naively assume number of edges)
     let length = path.length;
+    if (length==0) return 0
 
-    //sum of path use counts
-    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0);
+    //average path cost (normalised assuming cost is between 0-100)
+    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length/100;
 
-    //apply formula (currently very very naive)
-    return 1/Math.abs(targetLength-length)/distances/uses/costs
+    //average node distance (normalised to be 0-1)
+    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0)/length;
+
+    //average of path use counts (not normalised but scaled by 1/10)
+    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length/10;
+
+    //apply formula (currently very naive)
+    return 1-costs-distances-uses
 }
 
 //endregion
@@ -296,9 +302,10 @@ function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],
 templateNode();
 templateNode(inNodes=[testNodes[0]],outNodes=undefined,stateKeys=["isNearCliff","isDead"],stateVars=[true,false]);
 templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
-templateNode(inNodes=[testNodes[1]],outNodes=undefined,stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
+templateNode(inNodes=[testNodes[1]],outNodes=[testNodes[0]],stateKeys=["isNearCliff","isCool"],stateVars=[true,true]);
 g.printAll();
-console.log("Path finding test: ",isPathPossible(g,testNodes[0],testNodes[2]));
+console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[1]],g,testNodes[0]));
+console.log("Path valuation: ",pathValuation([testEdges[0],testEdges[2],testEdges[3]],g,testNodes[0]));
 console.log(booleanDistance(testNodes[1],testNodes[2]))
 //endregion
 
