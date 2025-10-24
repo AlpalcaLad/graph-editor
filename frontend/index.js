@@ -1062,7 +1062,7 @@ function processAlgorithm(){
     let tempEdge;
     for (let i=0; i<loadedNodes.length; i++){
         tempNode = new Node(label=-1)
-        tempNode.state=loadedNodes[i].state;
+        if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
         algoNodes.push(tempNode)
     }
     for (let i=0; i<loadedArrows.length; i++){
@@ -1072,6 +1072,8 @@ function processAlgorithm(){
             algoNodes[src],
             algoNodes[trg]
         )
+        if (loadedArrows[i].state) tempEdge.state=loadedArrows[i].state
+        algoEdges.push(tempEdge)
     }
     const algoGraph = new graph(algoNodes,algoEdges);
     console.log(algoGraph.printAll())
