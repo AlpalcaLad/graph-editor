@@ -15,17 +15,21 @@ class manager{
         this.nextEdgeId++;
         return 'E'+this.nextEdgeId; //'E0', 'E1', 'E2'...
     }
+    resetIds(){
+        this.nextEdgeId=-1;
+        this.nextNodeId=-1;
+    }
 }
 //constant reference to instance of manager class, to be accessed in other classes
 const man=new manager(); 
 //endregion
 
-//region Node
+//region node
 /*
 node class for verticies of graph. Optional argument label to force a specific name for a vertex, otherwise uses getFreshNodeId
 These labels should be unique but this is not enforced by code.
 */
-class Node{
+class node{
     constructor(label=-1){
         //initialise node edges to be empty arrays
         this.edgesIn=[];
@@ -115,11 +119,11 @@ edge class for edges of graph connecting verticies. These cannot be given a uniq
 class edge{
     constructor(source,target){
         this.source=source;
-        if (!source instanceof Node) throw new Error("Source is not of type 'node'")
+        if (!source instanceof node) throw new Error("Source is not of type 'node'")
         source.addEdgeOut(this);
 
         this.target=target;
-        if (!target instanceof Node) throw new Error("Target is not of type 'node'")
+        if (!target instanceof node) throw new Error("Target is not of type 'node'")
         target.addEdgeIn(this);
 
         this.label=man.getFreshEdgeId();
@@ -255,7 +259,7 @@ Sum of path costs, sum of node distances along path, length, sum of path use cou
 
 */
 
-function pathValuation(path, graph, targetState=new Node(label=-1)){
+function naivePathValuation(path, graph, targetState=new node(label=-1)){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
     //length (naively assume number of edges)
@@ -277,14 +281,16 @@ function pathValuation(path, graph, targetState=new Node(label=-1)){
 
 //endregion
 
+const testNodes=[];
+const testEdges=[];
 
 //region Test Code
 function testCode(){
-    const testNodes=[];
-    const testEdges=[];
+    testNodes.length=0;
+    testEdges.length=0;
     const g = new graph(testNodes,testEdges);
     function templateNode(inNodes=[],outNodes=[],stateKeys=[],stateVars=[],edges=[],label=-1){
-        let n = new Node(label=label);
+        let n = new node(label=label);
         if (stateKeys.length>0 && stateKeys.length==stateVars.length) n.defineState(stateKeys,stateVars)
         testNodes.push(n);
         let e;

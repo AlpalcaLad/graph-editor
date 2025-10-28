@@ -308,7 +308,7 @@ class mouse{
         this.mb_right=0;
         this.mb_middle=0;
         this.grabPoint = undefined;
-        this.mouseOffset=[-5,-40] //force mouse position to be top left of cursor
+        this.mouseOffset=[-5,-60] //force mouse position to be top left of cursor
         //frame old x and y, to calculate delta x and y for the mouse
         this.ox=undefined;
         this.oy=undefined;
@@ -336,7 +336,7 @@ class mouse{
             }
         }
     }
-    get(x,y){
+    get(x=this.x,y=this.y){
         return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
     }
     orderClickers(){
@@ -507,7 +507,7 @@ class sprite {
 //endregion
 
 //region node base class 
-class node{
+class nodeBase{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,state=undefined){
         this.spr = new sprite("c",[radius],this,colour,x,y,z);
         this.x=x;
@@ -560,7 +560,7 @@ class node{
 //region physics node
 const physicsNodes=[]
 const drawLabels = true
-class physicsNode extends node{
+class physicsNode extends nodeBase{
     constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,mass=1,elasticity=0.5,label=undefined,state=undefined){
         super(x,y,radius,colour,z-1,state);
         this.m=mass;
@@ -697,6 +697,10 @@ class physicsNode extends node{
 }
 //endregion
 
+//region selected screen
+
+//endregion
+
 //region arrows
 const minArrowLength=8
 const arrowFromNodeDist=4
@@ -712,6 +716,13 @@ class arrow{
         this.z=-50; //arrows for now are just fixed depth
         this.directed=directed; //whether arrow should have a head
         this.state=state;
+    }
+
+    center(){
+        return [
+            (this.parent.x+this.target.x)/2,
+            (this.parent.y+this.target.y)/2
+        ]
     }
 
     draw(){
@@ -1001,6 +1012,32 @@ function appropriate_text_color(backgroundHex){
 }
 //endregion
 
+function point_distance(x1,y1,x2,y2){
+    return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))
+}
+
+function nearestObjectToMouse(){
+    let bestObject;
+    let bestDistance=-1;
+    let tempDist;
+    let mPos = m.get();
+    for (n in loadedNodes){
+        tempDist = point_distance(mPos[0],n.x,mPos[1],n.y);
+        if (tempDist>bestDistance){
+            bestObject = n;
+            bestDistance=tempDist;
+        }
+    }
+    for (n in loadedArrows){
+        tempDist = point_distance(mPos[0],n.x,mPos[1],n.y);
+        if (tempDist>bestDistance){
+            bestObject = n;
+            bestDistance=tempDist;
+        }
+    }
+    return bestDistance;
+}
+
 //region Listeners
 window.addEventListener("wheel", event => {
     const delta = Math.sign(event.deltaY);
@@ -1054,14 +1091,18 @@ for (let i=0; i<nodeCount; i++){
 s.tick();
 //endregion
 
+const algoNodes=[];
+const algoEdges=[];
+
 //region Algorithm
 function processAlgorithm(){
-    const algoNodes=[];
-    const algoEdges=[];
+    algoNodes.length=0;
+    algoEdges.length=0;
+    man.resetIds();
     let tempNode;
     let tempEdge;
     for (let i=0; i<loadedNodes.length; i++){
-        tempNode = new Node(label=-1)
+        tempNode = new node(label=-1)
         if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
         algoNodes.push(tempNode)
     }
