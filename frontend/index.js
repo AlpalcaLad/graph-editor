@@ -698,7 +698,42 @@ class physicsNode extends nodeBase{
 //endregion
 
 //region selected screen
+class selectionScreen{
+    constructor(){
+        this.visible = true;
+        this.bbox = [-125,-300,125,300]
+        this.padding = 5;
+        this.x=ctx.canvas.width-150;
+        this.y=350;
+        s.draw.push(this);
+        this.z = 10000;
+        this.borderColour = "#000000"
+        this.backColour = "#FFFFFF"
+        this.selected = undefined;
+    }
+    draw(){
+        if (this.visible){
+            ctx.fillStyle=this.borderColour;
+            ctx.fillRect(this.x+this.bbox[0],this.y+this.bbox[1],this.bbox[2]-this.bbox[0],this.bbox[3]-this.bbox[1]);
+            ctx.fillStyle=this.backColour;
+            ctx.fillRect(this.x+this.bbox[0]+this.padding,this.y+this.bbox[1]+this.padding,this.bbox[2]-this.bbox[0]-2*this.padding,this.bbox[3]-this.bbox[1]-2*this.padding);
+        
+            if (this.selected !== undefined){
+                if (this.selected instanceof nodeBase){
 
+                }
+            }
+        }
+    }
+    onChange(obj=undefined){
+        if (obj === undefined) visible = false
+        else {
+            visible = true
+            this.selected = obj;
+        }
+    }
+}
+const selection = new selectionScreen()
 //endregion
 
 //region arrows
@@ -719,16 +754,45 @@ class arrow{
     }
 
     center(){
-        return [
-            (this.parent.x+this.target.x)/2,
-            (this.parent.y+this.target.y)/2
-        ]
+        if (this.parent==this.target){
+            return [
+                this.parent.x+this.parent.r,
+                this.parent.y-this.parent.r
+            ]
+        } else {
+            return [
+                (this.parent.x+this.target.x)/2,
+                (this.parent.y+this.target.y)/2
+            ]
+        }
     }
 
     draw(){
         if (this.parent===undefined || this.target===undefined){this.kill()}
-        if (this.parent===this.target){ //node points to itself
-            //TODO self referencing nodes
+        if (this.parent==this.target){ //node points to itself
+            ctx.fillStyle=this.colour;
+            ctx.beginPath();
+            ctx.lineWidth=4;
+            let [x,y]=c.get(this.parent.x,this.parent.y-this.parent.r);
+            ctx.moveTo(x, y);
+            let [x2,y2]=c.get(this.parent.x+this.parent.r,this.parent.y);
+            let [x3,y3]=c.get(this.parent.x+0.5*this.parent.r,this.parent.y-2.5*this.parent.r);
+            let [x4,y4]=c.get(this.parent.x+2.5*this.parent.r,this.parent.y-0.5*this.parent.r);
+            ctx.bezierCurveTo(x3,y3,x4,y4,x2,y2);
+            ctx.stroke();
+            ctx.beginPath();
+
+            let angle = 90
+            ctx.moveTo(x, y);
+            ctx.lineTo(x-headLength*Math.cos(angle-Math.PI/headWidth),y-headLength*Math.sin(angle-Math.PI/headWidth));
+            
+            //path from the side point of the arrow, to the other side point
+            ctx.lineTo(x-headLength*Math.cos(angle+Math.PI/headWidth),y-headLength*Math.sin(angle+Math.PI/headWidth));
+            
+            //path from the side point back to the tip of the arrow, and then again to the opposite side point
+            ctx.lineTo(x, y);
+            ctx.lineTo(x-headLength*Math.cos(angle-Math.PI/headWidth),y-headLength*Math.sin(angle-Math.PI/headWidth));
+            ctx.fill();
         } else { //node points to another node
             let dist = this.parent.dist(this.target);
             if (dist>this.parent.r+this.target.r+minArrowLength){
