@@ -1135,7 +1135,7 @@ function nearestObjectToMouse(){
     let bestObject;
     let bestDistance=-1;
     let tempDist;
-    let mPos = c.get(m.x,m.y);
+    let mPos = [m.x,m.y];
     for (let n in loadedNodes){
         tempDist = point_distance(mPos[0],mPos[1],loadedNodes[n].x,loadedNodes[n].y);
         if (bestDistance==-1 || tempDist<bestDistance){
@@ -1146,7 +1146,7 @@ function nearestObjectToMouse(){
     for (let n in loadedArrows){
         let [x,y] = loadedArrows[n].center()
         tempDist = point_distance(mPos[0],mPos[1],x,y);
-        if (bestDistance==-1 || tempDist<bestDistance){
+        if (bestDistance==-1 || tempDist<bestDistance || (tempDist==bestDistance && bestObject==selection.selected)){
             bestObject = loadedArrows[n];
             bestDistance=tempDist;
         }
