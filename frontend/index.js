@@ -282,7 +282,6 @@ class scheduler{
         }
         if (this.debugMode){this.debugger.endDraw();}
         ctx.fillStyle = "#000000";
-        ctx.fillRect(m.x-20,m.y-20,40,40)
     }
 }
 //create static reference to a scheduler object
@@ -339,7 +338,7 @@ class mouse{
         }
     }
     get(x=this.x,y=this.y){
-        return [(x-c.x)/c.zoom,(y-c.y)/c.zoom]
+        return [(x-c.x)*c.zoom,(y-c.y)*c.zoom]
     }
     orderClickers(){
         //order clickers based on z (the closest thing to view gets selected first)
