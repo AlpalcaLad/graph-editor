@@ -699,6 +699,8 @@ class physicsNode extends nodeBase{
 //endregion
 
 //region selected screen
+//this adds a rectangular view to the right of the screen which shows which object is selected (using key 's')
+//this is also used for showing states and editing them
 class selectionScreen{
     constructor(){
         this.visible = false;
@@ -730,6 +732,7 @@ class selectionScreen{
                     ctx.fillStyle=appropriate_text_color(this.selected.spr.colour)
                     ctx.fillText(this.selected.label,x,y);
                 } else if (this.selected instanceof arrow){
+
                     //draw arrow parent
                     ctx.fillStyle=this.selected.parent.spr.colour;
                     ctx.beginPath();
@@ -740,6 +743,7 @@ class selectionScreen{
                     ctx.font = "15px Arial";
                     ctx.fillStyle=appropriate_text_color(this.selected.parent.spr.colour)
                     ctx.fillText(this.selected.parent.label,x1,y1);
+
                     //draw arrow target
                     ctx.fillStyle=this.selected.target.spr.colour;
                     ctx.beginPath();
@@ -750,7 +754,9 @@ class selectionScreen{
                     ctx.font = "15px Arial";
                     ctx.fillStyle=appropriate_text_color(this.selected.target.spr.colour)
                     ctx.fillText(this.selected.target.label,x2,y2);
+                    
                     //draw arrow between the two
+                    //TODO abstract arrow drawing into function
                     ctx.fillStyle=this.colour;
                     ctx.lineWidth = 4;
                     ctx.beginPath();
@@ -763,7 +769,7 @@ class selectionScreen{
                     //starting a new path from the head of the arrow to one of the sides of the point
                     ctx.beginPath();
                     ctx.fillStyle="#000000";
-                    let angle = 0
+                    let angle = 0 //using same formula as for arrow class but with angle 0
                     ctx.moveTo(x2, y2);
                     ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
                     //path from the side point of the arrow, to the other side point
