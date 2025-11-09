@@ -281,6 +281,8 @@ class scheduler{
             this.draw[i].draw();
         }
         if (this.debugMode){this.debugger.endDraw();}
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(m.x-20,m.y-20,40,40)
     }
 }
 //create static reference to a scheduler object
@@ -398,18 +400,18 @@ onmousemove = function(e){
     //xRel,yRel are screen relative
     m.xRel = e.clientX+m.mouseOffset[0];
     m.yRel = e.clientY+m.mouseOffset[1];
-    //x,y are world space coordinates
-    m.x = (m.xRel)/c.zoom + c.x;
-    m.y = (m.yRel)/c.zoom + c.y;
     //if middle clicking, move camera based on the mouse's position delta
     if (m.mb_middle){
-        if (m.ox!=m.x || m.oy!=m.y){
+        if (m.ox!=m.xRel || m.oy!=m.yRel){
             c.x-=(m.xRel-m.ox)/c.zoom
             c.y-=(m.yRel-m.oy)/c.zoom
             m.ox=m.xRel
             m.oy=m.yRel
         }
-    }
+    } 
+    //x,y are world space coordinates
+    m.x = (m.xRel)/c.zoom + c.x;
+    m.y = (m.yRel)/c.zoom + c.y;
 }
 onmousedown = function(e){
     switch (e.button){
@@ -700,7 +702,7 @@ class physicsNode extends nodeBase{
 //region selected screen
 class selectionScreen{
     constructor(){
-        this.visible = true;
+        this.visible = false;
         this.bbox = [-125,-300,125,300]
         this.padding = 5;
         this.x=ctx.canvas.width-150;
@@ -717,18 +719,68 @@ class selectionScreen{
             ctx.fillRect(this.x+this.bbox[0],this.y+this.bbox[1],this.bbox[2]-this.bbox[0],this.bbox[3]-this.bbox[1]);
             ctx.fillStyle=this.backColour;
             ctx.fillRect(this.x+this.bbox[0]+this.padding,this.y+this.bbox[1]+this.padding,this.bbox[2]-this.bbox[0]-2*this.padding,this.bbox[3]-this.bbox[1]-2*this.padding);
-        
-            if (this.selected !== undefined){
+            if (this.selected !== undefined){ //draw icon for selected object
                 if (this.selected instanceof nodeBase){
-
+                    ctx.fillStyle=this.selected.spr.colour;
+                    ctx.beginPath();
+                    let [x,y]=[this.x,this.y+this.bbox[1]+75];
+                    ctx.arc(x,y,40, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.selected.spr.colour;
+                    ctx.fill();
+                    ctx.font = "15px Arial";
+                    ctx.fillStyle=appropriate_text_color(this.selected.spr.colour)
+                    ctx.fillText(this.selected.label,x,y);
+                } else if (this.selected instanceof arrow){
+                    //draw arrow parent
+                    ctx.fillStyle=this.selected.parent.spr.colour;
+                    ctx.beginPath();
+                    let [x1,y1]=[this.x-60,this.y+this.bbox[1]+75];
+                    ctx.arc(x1,y1,35, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.selected.parent.spr.colour;
+                    ctx.fill();
+                    ctx.font = "15px Arial";
+                    ctx.fillStyle=appropriate_text_color(this.selected.parent.spr.colour)
+                    ctx.fillText(this.selected.parent.label,x1,y1);
+                    //draw arrow target
+                    ctx.fillStyle=this.selected.target.spr.colour;
+                    ctx.beginPath();
+                    let [x2,y2]=[this.x+60,this.y+this.bbox[1]+75];
+                    ctx.arc(x2,y2,35, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.selected.target.spr.colour;
+                    ctx.fill();
+                    ctx.font = "15px Arial";
+                    ctx.fillStyle=appropriate_text_color(this.selected.target.spr.colour)
+                    ctx.fillText(this.selected.target.label,x2,y2);
+                    //draw arrow between the two
+                    ctx.fillStyle=this.colour;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    [x1,y1] = [x1+35,y1]
+                    ctx.moveTo(x1,y1);
+                    [x2,y2] = [x2-35,y2]
+                    ctx.lineTo(x2-20,y2);
+                    ctx.stroke();
+                    //SOURCE: https://stackoverflow.com/questions/808826/drawing-an-arrow-using-html-canvas
+                    //starting a new path from the head of the arrow to one of the sides of the point
+                    ctx.beginPath();
+                    ctx.fillStyle="#000000";
+                    let angle = 0
+                    ctx.moveTo(x2, y2);
+                    ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
+                    //path from the side point of the arrow, to the other side point
+                    ctx.lineTo(x2-headLength*Math.cos(angle+Math.PI/headWidth),y2-headLength*Math.sin(angle+Math.PI/headWidth));
+                    //path from the side point back to the tip of the arrow, and then again to the opposite side point
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
+                    ctx.fill();
                 }
             }
         }
     }
-    onChange(obj=undefined){
-        if (obj === undefined) visible = false
+    onChange(obj){
+        if (obj === undefined) this.visible = false
         else {
-            visible = true
+            this.visible = true
             this.selected = obj;
         }
     }
@@ -1084,22 +1136,23 @@ function nearestObjectToMouse(){
     let bestObject;
     let bestDistance=-1;
     let tempDist;
-    let mPos = m.get();
-    for (n in loadedNodes){
-        tempDist = point_distance(mPos[0],n.x,mPos[1],n.y);
-        if (tempDist>bestDistance){
-            bestObject = n;
+    let mPos = c.get(m.x,m.y);
+    for (let n in loadedNodes){
+        tempDist = point_distance(mPos[0],mPos[1],loadedNodes[n].x,loadedNodes[n].y);
+        if (bestDistance==-1 || tempDist<bestDistance){
+            bestObject = loadedNodes[n];
             bestDistance=tempDist;
         }
     }
-    for (n in loadedArrows){
-        tempDist = point_distance(mPos[0],n.x,mPos[1],n.y);
-        if (tempDist>bestDistance){
-            bestObject = n;
+    for (let n in loadedArrows){
+        let [x,y] = loadedArrows[n].center()
+        tempDist = point_distance(mPos[0],mPos[1],x,y);
+        if (bestDistance==-1 || tempDist<bestDistance){
+            bestObject = loadedArrows[n];
             bestDistance=tempDist;
         }
     }
-    return bestDistance;
+    return bestObject;
 }
 
 //region Listeners
@@ -1119,8 +1172,11 @@ window.addEventListener("keydown", function (event) {
         return; // Do nothing if the event was already processed
     }
     switch (event.key.toLowerCase()) {
-        case "z":
-            if (loadedArrows.length>0){loadedArrows[loadedArrows.length-1].kill()}
+        case "s":
+            selection.onChange(nearestObjectToMouse())
+            break;
+        case "d":
+            selection.onChange(undefined)
             break;
         case "n":
             let size = 45//Math.random()*20+30
@@ -1130,7 +1186,9 @@ window.addEventListener("keydown", function (event) {
             killAll()
             break;
         case "x":
-            if (physicsNodes.length>0){physicsNodes[physicsNodes.length-1].kill()}
+            if (selection.selected !== undefined){
+                selection.selected.kill();
+            }
             break;
 
         default:
