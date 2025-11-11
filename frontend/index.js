@@ -114,19 +114,22 @@ class fileManager{
             //using Math.round to prevent excessive saving of floats
             text+="x>"+Math.round(n.x).toString() // "x>?
             text+="|y>"+Math.round(n.y).toString() // "|y>?"
+            function writeElement(value, key, map) {
+                text+="|"+key+">"+value.toString()
+            }
+            if (n.state!==undefined){
+                n.state.forEach(writeElement);
+            }
             text+="~" // "/"
             // "label/x>?|y>?/"
             let arrowsDrawn=false
+            //draw text for each state of the selected object
             for (const a of loadedArrows){ //loop through all arrows to find relevant ones
                 if (a.parent==n){
                     arrowsDrawn=true
                     text+="target>"+a.target.label
                     if (a.state!==undefined){
-                        let key;
-                        for (let i=0; i<a.state.keys.length || 0; i++){
-                            key = a.state.keys[i];
-                            text+="|"+key+">"+a.state.get(key).toString()
-                        }
+                        a.state.forEach(writeElement);
                     }
                     text+=","
                 }
@@ -509,7 +512,7 @@ class sprite {
 
 //region node base class 
 class nodeBase{
-    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,state=undefined){
+    constructor(x=0,y=0,radius=50,colour="#FF0000",z=0,state=new Map()){
         this.spr = new sprite("c",[radius],this,colour,x,y,z);
         this.x=x;
         this.y=y;
@@ -731,6 +734,17 @@ class selectionScreen{
                     ctx.font = "15px Arial";
                     ctx.fillStyle=appropriate_text_color(this.selected.spr.colour)
                     ctx.fillText(this.selected.label,x,y);
+
+                    //draw text for each state of the selected object
+                    if (this.selected.state!==undefined){
+                        let statesWritten = 0
+                        function logMapElements(value, key, map) {
+                            ctx.fillText(`${key}: ${value}`,x-ctx.measureText(`${key}: ${value}`).width/2,y+75+25*statesWritten);
+                            statesWritten++
+                        }
+                        ctx.fillStyle="#000000"
+                        this.selected.state.forEach(logMapElements);
+                    }
                 } else if (this.selected instanceof arrow){
 
                     //draw arrow parent
@@ -778,6 +792,19 @@ class selectionScreen{
                     ctx.lineTo(x2, y2);
                     ctx.lineTo(x2-headLength*Math.cos(angle-Math.PI/headWidth),y2-headLength*Math.sin(angle-Math.PI/headWidth));
                     ctx.fill();
+
+                    let [x,y] = [(x1+x2)/2,(y1+y2)/2];
+
+                    //draw text for each state of the selected object
+                    if (this.selected.state!==undefined){
+                        let statesWritten = 0
+                        function logMapElements(value, key, map) {
+                            ctx.fillText(`${key}: ${value}`,x-ctx.measureText(`${key}: ${value}`).width/2,y+75+25*statesWritten);
+                            statesWritten++
+                        }
+                        ctx.fillStyle="#000000"
+                        this.selected.state.forEach(logMapElements);
+                    }
                 }
             }
         }
@@ -787,6 +814,22 @@ class selectionScreen{
         else {
             this.visible = true
             this.selected = obj;
+        }
+    }
+    update(stateString){
+        let sepArray = stateString.split(":")
+        if (this.selected!==undefined && sepArray.length==2){
+            if (sepArray[1]=="true"){
+                this.selected.state.set(sepArray[0],true) //boolean
+            } else if (sepArray[1]=="false"){
+                this.selected.state.set(sepArray[0],false) //boolean
+            } else {
+                if (!isNaN(+sepArray[1])){
+                    this.selected.state.set(sepArray[0],+sepArray[1]) //number
+                } else{
+                    this.selected.state.set(sepArray[0],sepArray[1]) //string
+                }
+            }
         }
     }
 }
@@ -799,7 +842,7 @@ const arrowFromNodeDist=4
 const headLength = 20;
 const headWidth = 6;
 class arrow{
-    constructor(parent,target=parent,colour="#000000",directed=true,state=undefined){
+    constructor(parent,target=parent,colour="#000000",directed=true,state=new Map()){
         this.parent=parent;
         this.target=target;
         this.colour=colour;
@@ -1173,7 +1216,7 @@ window.addEventListener('contextmenu', function(ev) {
 
 //keyboard inputs
 window.addEventListener("keydown", function (event) {
-    if (event.defaultPrevented) {
+    if (event.defaultPrevented || document.getElementById("downloadTarget")==document.activeElement || document.getElementById("stateSelection")==document.activeElement) {
         return; // Do nothing if the event was already processed
     }
     switch (event.key.toLowerCase()) {
