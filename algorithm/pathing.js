@@ -254,12 +254,17 @@ function closestBooleanState(nodes,target,returnIndex=false){
     else return nodes[bestIndex];
 }
 /*
-Path Valuation
+Naive Path Valuation based on
 Sum of path costs, sum of node distances along path, length, sum of path use counts
 
 */
 
-function naivePathValuation(path, graph, targetState=new node(label=-1)){
+//constants for naive path/edge valuation
+const costWeight = 1/100
+const distanceWeight = 1
+const useWeight = 1/10
+
+function naivePathValuation(path, targetState=new node(label=-1)){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
     //length (naively assume number of edges)
@@ -267,16 +272,74 @@ function naivePathValuation(path, graph, targetState=new node(label=-1)){
     if (length==0) return 0
 
     //average path cost (normalised assuming cost is between 0-100)
-    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length/100;
+    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length * costWeight;
 
     //average node distance (normalised to be 0-1)
-    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0)/length;
+    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0)/length * distanceWeight;
 
     //average of path use counts (not normalised but scaled by 1/10)
-    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length/10;
+    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length * useWeight;
 
     //apply formula (currently very naive)
     return 1-costs-distances-uses
+}
+
+function naiveEdgeValuation(edge,targetState = new node(label=-1)){
+    //average path cost (normalised assuming cost is between 0-100)
+    let costs = (edge.state.get("cost") || 0) * costWeight;
+
+    //average node distance (normalised to be 0-1)
+    let distances = booleanDistance(edge.target,targetState)/length * distanceWeight;
+
+    //average of path use counts (not normalised but scaled by 1/10)
+    let uses = (edge.state.get("uses") || 0) /length * useWeight;
+
+    //apply formula (currently very naive)
+    return 1-costs-distances-uses
+}
+
+//Generate a path using a given value function
+/*
+if length is 1
+    return the best edge to take
+for each possible edge:
+    call self on that edge's target with length reduced by 1
+find which edge adds the most value
+return [edge:path]
+*/
+function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 5){ //generate a maximal (based on valueFunction) path of preset length
+    if (length < 1) throw new Error("Error: invalid path length requested ("+length.toString()+")")
+    if (currentNode.edgesOut.length==0) return [];
+    if (length == 1){
+        let bestEdge = undefined;
+        let bestValue = undefined;
+        let tempValue = undefined;
+        for (let i=0; i<currentNode.edgesOut.length; i++){
+            let e = currentNode.edgesOut[i];
+            tempValue=edgeValuer(e,targetState);
+            if (bestValue===undefined || tempValue>bestValue){
+                bestValue=tempValue;
+                bestEdge=e;
+            }
+        }
+        return [bestEdge]
+    } else {
+        let bestPath = undefined;
+        let bestValue = undefined;
+        let tempValue = undefined;
+        let subPath = undefined;
+        for (let i=0; i<currentNode.edgesOut.length; i++){
+            let e = currentNode.edgesOut[i];
+            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-1)
+            subPath.unshift(e)
+            tempValue=pathValuer(subPath,targetState);
+            if (bestValue===undefined || tempValue>bestValue){
+                bestValue=tempValue;
+                bestPath=subPath;
+            }
+        }
+        return bestPath
+    }
 }
 
 //endregion

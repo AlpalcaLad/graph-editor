@@ -19,6 +19,8 @@
             <input id="stateSelection" type="text" name="state" value="stateName:stateValue">
             <input type="submit" id="output" value="Update">
         </form>
+        <form onsubmit="event.preventDefault(); selection.selectNode(false);"><input type="submit" id="algo" value="Set Current Node"></form>
+        <form onsubmit="event.preventDefault(); selection.selectNode(true);"><input type="submit" id="algo" value="Set Target Node"></form>
         </div>
         <canvas id="myCanvas" width="100" height="100">
         </canvas>

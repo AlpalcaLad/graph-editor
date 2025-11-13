@@ -716,6 +716,12 @@ class selectionScreen{
         this.borderColour = "#000000"
         this.backColour = "#FFFFFF"
         this.selected = undefined;
+        this.targetNode = undefined;
+        this.currentNode = undefined;
+    }
+    selectNode(isTarget=false){
+        if (isTarget){this.targetNode = this.selected}
+        else {this.currentNode = this.selected}
     }
     draw(){
         if (this.visible){
@@ -1271,10 +1277,18 @@ function processAlgorithm(){
     man.resetIds();
     let tempNode;
     let tempEdge;
+    let currentNode;
+    let targetNode;
     for (let i=0; i<loadedNodes.length; i++){
         tempNode = new node(label=-1)
         if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
         algoNodes.push(tempNode)
+        if (loadedNodes[i]==selection.currentNode){
+            currentNode=tempNode
+        }
+        if (loadedNodes[i]==selection.targetNode){
+            targetNode=tempNode
+        }
     }
     for (let i=0; i<loadedArrows.length; i++){
         let src = loadedNodes.indexOf(loadedArrows[i].parent)
@@ -1288,5 +1302,10 @@ function processAlgorithm(){
     }
     const algoGraph = new graph(algoNodes,algoEdges);
     console.log(algoGraph.printAll())
+    //generate the best 5 length path
+    const lengthToPath = 5
+    console.log(`Path Generation from ${currentNode.label}, target:${targetNode.label}, length:${lengthToPath}`)
+    console.log(pathGeneration(naiveEdgeValuation,naivePathValuation,currentNode,targetNode,lengthToPath))
 }
+
 //endregion
