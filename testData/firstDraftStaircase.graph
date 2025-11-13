@@ -1,0 +1,14 @@
+0~x>345|y>346|isStepOne>true~target>1
+1~x>465|y>188|isStepOne>true~target>2
+2~x>563|y>340|isStepOne>true~target>0,target>3
+3~x>808|y>342|isStepTwo>true~target>4
+4~x>911|y>197|isStepTwo>true~target>5
+5~x>1019|y>360|isStepTwo>true~target>3,target>6
+6~x>1289|y>398|isStepThree>true~target>7
+7~x>1405|y>225|isStepThree>true~target>8
+8~x>1526|y>428|isStepThree>true~target>6,target>9
+9~x>1799|y>330|isJumpAfterSteps>true~
+10~x>502|y>605|isStepOne>true~
+11~x>943|y>636|isStepTwo>true~
+12~x>1401|y>653|isStepThree>true~
+13~x>1811|y>687|isJumpAfterSteps>true~
