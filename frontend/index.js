@@ -1285,6 +1285,10 @@ function processAlgorithm(){
 //endregion
 
 //region live algorithm
+/*
+constructing an algoRunner will load the frontend into the algorithm format and then start itself running every frame
+it has a lookahead of 5 by default and uses the naive path generation algorithms
+*/
 class algoRunner{
     constructor(){
         this.nodes=[]
@@ -1294,17 +1298,22 @@ class algoRunner{
         this.targetNode;
         this.mapping = new Map(); //find frontend node from graph node for highlighting
         this.waitTime = 0;
+        //path generation parameters
         this.lookahead = 5;
+        this.pathValuer = naivePathValuation;
+        this.edgeValuer = naiveEdgeValuation;
+        //start runner and load graph
         s.step.push(this); //run every frame
         this.prepare();
     }
+    //kill all children and stop running (used when resetting the runner)
     kill(){
         for (let i=0; i<this.nodes.length; i++){
             this.nodes[i].kill();
         }
         let ind = s.step.indexOf(this)
         if (ind!=-1){
-            s.draw.splice(ind,1)
+            s.step.splice(ind,1)
         }
     }
     prepare(){
@@ -1346,7 +1355,7 @@ class algoRunner{
     step(){
         this.waitTime--;
         if (this.waitTime<=0){
-            this.bestPath = pathGeneration(naiveEdgeValuation,naivePathValuation,this.currentNode,this.targetNode,this.lookahead);
+            this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead);
             if (this.bestPath.length>0){
                 let frontendNode = this.mapping.get(this.currentNode)
                 frontendNode.setColour("#999999")

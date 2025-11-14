@@ -215,24 +215,26 @@ function booleanToInt(bool){
 //find the difference between the states of node1 and node2, between 0 (identical), 1 (opposites)
 //sqrt ( (1st diff)^2 + (2nd diff)^2 ... ), ie pythagorian distance
 //this is safe for undefined states using booleanToInt, but all states must be of type boolean||undefined
-function booleanDistance(node1,node2){
+function booleanDistance(node1,node2,weightings=new Map()){
     //Calculate the distance between two node's states
     let summedDistance=0;
     //create an array with all distinct keys in either node's state
     let allKeys = [...new Set([...node1.state.keys(), ...node2.state.keys()])] //SOURCE: https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+    let tempWeight;
     if (allKeys.length==0) return 0
     for (let i=0; i<allKeys.length; i++){ //compare each key individually
-        summedDistance+=Math.pow(
+        tempWeight = weightings.get(allKeys[i]) || 1
+        summedDistance+=Math.pow(tempWeight*(
             booleanToInt(node1.state.get(allKeys[i]))
             -booleanToInt(node2.state.get(allKeys[i]))
-        ,2)
+        ),2)
     }
     let unnormalizedDist = Math.sqrt(summedDistance)
     //normalize to be between 0,1 by dividing by the largest possible distance
     return unnormalizedDist / (2*Math.sqrt(allKeys.length))
 }
 //find the state with the smallest boolean distance to the target
-function closestBooleanState(nodes,target,returnIndex=false){
+function closestBooleanState(nodes,target,returnIndex=false,weightings=new Map()){
     //safety check for empty node array
     if (nodes.length == 0) throw new Error("Empty nodes array, cannot compare");
     //initialise best tracker
@@ -241,7 +243,7 @@ function closestBooleanState(nodes,target,returnIndex=false){
     //initialise variable to hold the distance of each node
     let tempDist;
     for (let i=0; i<nodes.length; i++){ //check each node sequentially
-        tempDist = booleanDistance(nodes[i],target);
+        tempDist = booleanDistance(nodes[i],target,weightings);
         if (bestValue==-1 || bestValue>tempDist){ //if better (or first value, detected by bestValue==-1)
             //update to reflect new best distance found
             bestValue=tempDist;
@@ -264,6 +266,8 @@ const costWeight = 1/100
 const distanceWeight = 1
 const useWeight = 1/10
 
+//need both path and edge valuation as in some metrics these may be different
+//for example a metric may weight immediate states higher than future ones
 function naivePathValuation(path, targetState=new node(label=-1)){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
@@ -298,7 +302,7 @@ function naiveEdgeValuation(edge,targetState = new node(label=-1)){
     return 1-costs-distances-uses
 }
 
-//Generate a path using a given value function
+//Generate a path using given value functions
 /*
 if length is 1
     return the best edge to take
@@ -308,32 +312,35 @@ find which edge adds the most value
 return [edge:path]
 */
 function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 5){ //generate a maximal (based on valueFunction) path of preset length
+    //throw an error if trying to generate too short of a length
+    //this should only happen if pathGeneration is called incorrectly
     if (length < 1) throw new Error("Error: invalid path length requested ("+length.toString()+")")
-    if (currentNode.edgesOut.length==0) return [];
+    if (currentNode.edgesOut.length==0) return []; //if dead end just return an empty path
+    //base case, lookahead by 1
     if (length == 1){
         let bestEdge = undefined;
         let bestValue = undefined;
         let tempValue = undefined;
-        for (let i=0; i<currentNode.edgesOut.length; i++){
+        for (let i=0; i<currentNode.edgesOut.length; i++){ // compare each possible edges value
             let e = currentNode.edgesOut[i];
             tempValue=edgeValuer(e,targetState);
-            if (bestValue===undefined || tempValue>bestValue){
+            if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestEdge=e;
             }
         }
         return [bestEdge]
-    } else {
+    } else { //step case recurse deeper into each possible path
         let bestPath = undefined;
         let bestValue = undefined;
         let tempValue = undefined;
         let subPath = undefined;
-        for (let i=0; i<currentNode.edgesOut.length; i++){
+        for (let i=0; i<currentNode.edgesOut.length; i++){ //for each edge, recurse to generate the best path assuming we use that edge
             let e = currentNode.edgesOut[i];
             subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-1)
-            subPath.unshift(e)
+            subPath.unshift(e) //add edge to start of path array rather than end to order correctly
             tempValue=pathValuer(subPath,targetState);
-            if (bestValue===undefined || tempValue>bestValue){
+            if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestPath=subPath;
             }
