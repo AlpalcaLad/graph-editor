@@ -200,7 +200,6 @@ class fileManager{
                     }
                 }
                 if (target==undefined) continue
-                console.log(generatedNode,target)
                 new arrow(generatedNode,target,undefined,true,state);
                 //console.log(loadedArrows[loadedArrows.length-1])
             }
