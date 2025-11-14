@@ -163,6 +163,7 @@ class fileManager{
         loadedArrows.length=0 //keep track of all the arrows that need repointing
         let row = []
         let nodeInfo = []
+        text=text.replaceAll("\r","\n") //get rid of carridge returns bc what are they doing in my text file??
         for (const n of text.split("\n")){
             if (n=="") continue
             row = n.split("~")
@@ -199,6 +200,7 @@ class fileManager{
                     }
                 }
                 if (target==undefined) continue
+                console.log(generatedNode,target)
                 new arrow(generatedNode,target,undefined,true,state);
                 //console.log(loadedArrows[loadedArrows.length-1])
             }
@@ -598,6 +600,9 @@ class physicsNode extends nodeBase{
             }
         }
         super.kill()
+    }
+    setColour(col){
+        this.spr.colour=col;
     }
     draw(){
         ctx.font = "15px Arial";
@@ -1269,43 +1274,93 @@ s.tick();
 
 const algoNodes=[];
 const algoEdges=[];
-
+let runner;
 //region Algorithm
 function processAlgorithm(){
-    algoNodes.length=0;
-    algoEdges.length=0;
-    man.resetIds();
-    let tempNode;
-    let tempEdge;
-    let currentNode;
-    let targetNode;
-    for (let i=0; i<loadedNodes.length; i++){
-        tempNode = new node(label=-1)
-        if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
-        algoNodes.push(tempNode)
-        if (loadedNodes[i]==selection.currentNode){
-            currentNode=tempNode
-        }
-        if (loadedNodes[i]==selection.targetNode){
-            targetNode=tempNode
-        }
+    if (runner!==undefined){
+        runner.kill();
     }
-    for (let i=0; i<loadedArrows.length; i++){
-        let src = loadedNodes.indexOf(loadedArrows[i].parent)
-        let trg = loadedNodes.indexOf(loadedArrows[i].target)
-        tempEdge = new edge(
-            algoNodes[src],
-            algoNodes[trg]
-        )
-        if (loadedArrows[i].state) tempEdge.state=loadedArrows[i].state
-        algoEdges.push(tempEdge)
-    }
-    const algoGraph = new graph(algoNodes,algoEdges);
-    console.log(algoGraph.printAll())
-    //generate the best 5 length path
-    const lengthToPath = 5
-    console.log(`Path Generation from ${currentNode.label}, target:${targetNode.label}, length:${lengthToPath}`)
-    console.log(pathGeneration(naiveEdgeValuation,naivePathValuation,currentNode,targetNode,lengthToPath))
+    runner=new algoRunner();
 }
+//endregion
 
+//region live algorithm
+class algoRunner{
+    constructor(){
+        this.nodes=[]
+        this.edges=[]
+        this.graph;
+        this.currentNode;
+        this.targetNode;
+        this.mapping = new Map(); //find frontend node from graph node for highlighting
+        this.waitTime = 0;
+        this.lookahead = 5;
+        s.step.push(this); //run every frame
+        this.prepare();
+    }
+    kill(){
+        for (let i=0; i<this.nodes.length; i++){
+            this.nodes[i].kill();
+        }
+        let ind = s.step.indexOf(this)
+        if (ind!=-1){
+            s.draw.splice(ind,1)
+        }
+    }
+    prepare(){
+        this.nodes.length=0;
+        this.edges.length=0;
+        man.resetIds();
+        let tempNode;
+        let tempEdge;
+        let currentNode;
+        let targetNode;
+        for (let i=0; i<loadedNodes.length; i++){
+            loadedNodes[i].setColour("#999999")
+            tempNode = new node(-1)
+            if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
+            this.nodes.push(tempNode)
+            this.mapping.set(tempNode,loadedNodes[i]);
+            if (loadedNodes[i]==selection.currentNode){
+                currentNode=tempNode
+            }
+            if (loadedNodes[i]==selection.targetNode){
+                targetNode=tempNode
+            }
+        }
+        for (let i=0; i<loadedArrows.length; i++){
+            let src = loadedNodes.indexOf(loadedArrows[i].parent)
+            let trg = loadedNodes.indexOf(loadedArrows[i].target)
+            tempEdge = new edge(
+                this.nodes[src],
+                this.nodes[trg]
+            )
+            if (loadedArrows[i].state) tempEdge.state=loadedArrows[i].state
+            this.nodes.push(tempEdge)
+        }
+        this.graph = new graph(this.nodes,algoEdges);
+        if (this.currentNode===undefined) this.currentNode=this.nodes[0]
+        if (this.targetNode===undefined) this.targetNode=this.nodes[0]
+        console.log(this.graph.printAll())
+    }
+    step(){
+        this.waitTime--;
+        if (this.waitTime<=0){
+            this.bestPath = pathGeneration(naiveEdgeValuation,naivePathValuation,this.currentNode,this.targetNode,this.lookahead);
+            if (this.bestPath.length>0){
+                let frontendNode = this.mapping.get(this.currentNode)
+                frontendNode.setColour("#999999")
+                this.currentNode=this.bestPath[0].target;
+                frontendNode = this.mapping.get(this.currentNode)
+                frontendNode.setColour("#ffff00")
+                this.waitTime=this.bestPath[0].state.get("duration")||30
+                for (let [key, value] of this.mapping.entries()){
+                    if (value==selection.targetNode){
+                        this.targetNode=key
+                    }
+                }
+            }
+        }
+    }
+}
 //endregion
