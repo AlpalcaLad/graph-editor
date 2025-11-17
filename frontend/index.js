@@ -1304,6 +1304,7 @@ class algoRunner{
         //start runner and load graph
         s.step.push(this); //run every frame
         this.prepare();
+        this.weightings = new Map();
     }
     //kill all children and stop running (used when resetting the runner)
     kill(){
@@ -1350,11 +1351,19 @@ class algoRunner{
         if (this.currentNode===undefined) this.currentNode=this.nodes[0]
         if (this.targetNode===undefined) this.targetNode=this.nodes[0]
         console.log(this.graph.printAll())
+
+    }
+    setupWeightings(){ //hardcoded values
+        this.weightings = new Map([
+            ["isDead",10],
+            [],
+            []
+        ])
     }
     step(){
         this.waitTime--;
         if (this.waitTime<=0){
-            this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead);
+            this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
             if (this.bestPath.length>0){
                 let frontendNode = this.mapping.get(this.currentNode)
                 frontendNode.setColour("#999999")

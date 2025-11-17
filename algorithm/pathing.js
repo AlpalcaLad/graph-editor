@@ -224,14 +224,15 @@ function booleanDistance(node1,node2,weightings=new Map()){
     if (allKeys.length==0) return 0
     for (let i=0; i<allKeys.length; i++){ //compare each key individually
         tempWeight = weightings.get(allKeys[i]) || 1
-        summedDistance+=Math.pow(tempWeight*(
+        summedDistance+=tempWeight*Math.pow((
             booleanToInt(node1.state.get(allKeys[i]))
             -booleanToInt(node2.state.get(allKeys[i]))
         ),2)
     }
     let unnormalizedDist = Math.sqrt(summedDistance)
     //normalize to be between 0,1 by dividing by the largest possible distance
-    return unnormalizedDist / (2*Math.sqrt(allKeys.length))
+    allKeys.forEach(value => {unnormalizedDist/=(2*(weightings.get(allKeys[i]) || 1))});
+    return unnormalizedDist// / (2*Math.sqrt(allKeys.length))
 }
 //find the state with the smallest boolean distance to the target
 function closestBooleanState(nodes,target,returnIndex=false,weightings=new Map()){
@@ -268,7 +269,7 @@ const useWeight = 1/10
 
 //need both path and edge valuation as in some metrics these may be different
 //for example a metric may weight immediate states higher than future ones
-function naivePathValuation(path, targetState=new node(label=-1)){
+function naivePathValuation(path, targetState=new node(label=-1),weightings=new Map()){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
     //length (naively assume number of edges)
@@ -276,27 +277,27 @@ function naivePathValuation(path, targetState=new node(label=-1)){
     if (length==0) return 0
 
     //average path cost (normalised assuming cost is between 0-100)
-    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length * costWeight;
+    let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length * (weightings.get("cost")||costWeight);
 
     //average node distance (normalised to be 0-1)
-    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState)}, 0)/length * distanceWeight;
+    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState,weightings)}, 0)/length * (weightings.get("distance")||distanceWeight);
 
     //average of path use counts (not normalised but scaled by 1/10)
-    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length * useWeight;
+    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length * (weightings.get("uses")||useWeight);
 
     //apply formula (currently very naive)
     return 1-costs-distances-uses
 }
 
-function naiveEdgeValuation(edge,targetState = new node(label=-1)){
+function naiveEdgeValuation(edge,targetState = new node(label=-1),weightings=new Map()){
     //average path cost (normalised assuming cost is between 0-100)
-    let costs = (edge.state.get("cost") || 0) * costWeight;
+    let costs = (edge.state.get("cost") || 0) * (weightings.get("cost")||costWeight);
 
     //average node distance (normalised to be 0-1)
-    let distances = booleanDistance(edge.target,targetState)/length * distanceWeight;
+    let distances = booleanDistance(edge.target,targetState,weightings)/length * (weightings.get("distance")||distanceWeight);
 
     //average of path use counts (not normalised but scaled by 1/10)
-    let uses = (edge.state.get("uses") || 0) /length * useWeight;
+    let uses = (edge.state.get("uses") || 0) /length * (weightings.get("uses")||useWeight);
 
     //apply formula (currently very naive)
     return 1-costs-distances-uses
@@ -311,7 +312,7 @@ for each possible edge:
 find which edge adds the most value
 return [edge:path]
 */
-function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 5){ //generate a maximal (based on valueFunction) path of preset length
+function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 5, weightings=new Map()){ //generate a maximal (based on valueFunction) path of preset length
     //throw an error if trying to generate too short of a length
     //this should only happen if pathGeneration is called incorrectly
     if (length < 1) throw new Error("Error: invalid path length requested ("+length.toString()+")")
