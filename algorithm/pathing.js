@@ -231,7 +231,7 @@ function booleanDistance(node1,node2,weightings=new Map()){
     }
     let unnormalizedDist = Math.sqrt(summedDistance)
     //normalize to be between 0,1 by dividing by the largest possible distance
-    allKeys.forEach(value => {unnormalizedDist/=(2*(weightings.get(allKeys[i]) || 1))});
+    allKeys.forEach(value => {unnormalizedDist/=(2*(weightings.get(value) || 1))});
     return unnormalizedDist// / (2*Math.sqrt(allKeys.length))
 }
 //find the state with the smallest boolean distance to the target
