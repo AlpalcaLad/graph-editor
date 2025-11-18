@@ -67,7 +67,7 @@ class node{
     //find if an edge is in either array and remove it if so.
     //safe for edges that arent present in either array
     removeEdge(edgeToRemove){
-        edgeIndex = this.edgesIn.indexOf(edgeToRemove);
+        let edgeIndex = this.edgesIn.indexOf(edgeToRemove);
         if (edgeIndex!=-1){
             this.edgesIn.splice(edgeIndex,1);
             return
@@ -324,7 +324,7 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let tempValue = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ // compare each possible edges value
             let e = currentNode.edgesOut[i];
-            tempValue=edgeValuer(e,targetState);
+            tempValue=edgeValuer(e,targetState,weightings);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestEdge=e;
@@ -338,9 +338,9 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let subPath = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ //for each edge, recurse to generate the best path assuming we use that edge
             let e = currentNode.edgesOut[i];
-            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-1)
+            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-1,weightings)
             subPath.unshift(e) //add edge to start of path array rather than end to order correctly
-            tempValue=pathValuer(subPath,targetState);
+            tempValue=pathValuer(subPath,targetState,weightings);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestPath=subPath;

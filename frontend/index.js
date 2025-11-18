@@ -177,8 +177,8 @@ class fileManager{
                 if (toSet[0]=="x") x=parseInt(toSet[1]);
                 else if (toSet[0]=="y") y=parseInt(toSet[1]);
                 else{
-                    if (toSet[1]=="true") {toSet[1]==true;}
-                    if (toSet[1]=="false") {toSet[1]==false;}
+                    if (toSet[1]=="true") {toSet[1]=true;}
+                    if (toSet[1]=="false") {toSet[1]=false;}
                     state.set(toSet[0],toSet[1]);
                 }
             }
@@ -201,7 +201,6 @@ class fileManager{
                 }
                 if (target==undefined) continue
                 new arrow(generatedNode,target,undefined,true,state);
-                //console.log(loadedArrows[loadedArrows.length-1])
             }
         }
         //second pass
@@ -724,8 +723,14 @@ class selectionScreen{
         this.currentNode = undefined;
     }
     selectNode(isTarget=false){
-        if (isTarget){this.targetNode = this.selected}
-        else {this.currentNode = this.selected}
+        if (isTarget){
+            this.targetNode = this.selected; 
+            console.log(`DEBUG: target set to ${this.targetNode.label}`)
+        }
+        else {
+            this.currentNode = this.selected;
+            console.log(`DEBUG: current set to ${this.currentNode.label}`)
+        }
     }
     draw(){
         if (this.visible){
@@ -1203,6 +1208,7 @@ function nearestObjectToMouse(){
         }
     }
     for (let n in loadedArrows){
+        if (loadedArrows[n].target instanceof mouse) continue //ignore partial arrows
         let [x,y] = loadedArrows[n].center()
         tempDist = point_distance(mPos[0],mPos[1],x,y);
         if (bestDistance==-1 || tempDist<bestDistance || (tempDist==bestDistance && bestObject==selection.selected)){
@@ -1296,7 +1302,7 @@ class algoRunner{
         this.currentNode;
         this.targetNode;
         this.mapping = new Map(); //find frontend node from graph node for highlighting
-        this.waitTime = 0;
+        this.waitTime = 1;
         //path generation parameters
         this.lookahead = 5;
         this.pathValuer = naivePathValuation;
@@ -1304,7 +1310,7 @@ class algoRunner{
         //start runner and load graph
         s.step.push(this); //run every frame
         this.prepare();
-        this.weightings = new Map();
+        this.setupWeightings();
     }
     //kill all children and stop running (used when resetting the runner)
     kill(){
@@ -1315,8 +1321,10 @@ class algoRunner{
         if (ind!=-1){
             s.step.splice(ind,1)
         }
+        delete this;
     }
     prepare(){
+        this.waitTime=1
         this.nodes.length=0;
         this.edges.length=0;
         man.resetIds();
@@ -1354,15 +1362,21 @@ class algoRunner{
 
     }
     setupWeightings(){ //hardcoded values
-        this.weightings = new Map([
-            ["isDead",10],
-            [],
-            []
-        ])
+        let tempWeightings = [
+            ["isDead",10]
+        ]
+        this.weightings = new Map()
+        for (let i=0; i<tempWeightings.length; i++){
+            this.weightings.set(tempWeightings[i][0],tempWeightings[i][1])
+        }
+    }
+    togglePause(){
+        if (this.waitTime>-1) this.waitTime=-1
+        else this.waitTime=1
     }
     step(){
-        this.waitTime--;
-        if (this.waitTime<=0){
+        if (this.waitTime>0) this.waitTime--;
+        if (this.waitTime==0){
             this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
             if (this.bestPath.length>0){
                 let frontendNode = this.mapping.get(this.currentNode)
@@ -1374,6 +1388,9 @@ class algoRunner{
                 for (let [key, value] of this.mapping.entries()){
                     if (value==selection.targetNode){
                         this.targetNode=key
+                    }
+                    if (value==selection.currentNode){
+                        this.currentNode=key
                     }
                 }
             }
