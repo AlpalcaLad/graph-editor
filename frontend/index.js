@@ -1363,7 +1363,8 @@ class algoRunner{
     }
     setupWeightings(){ //hardcoded values
         let tempWeightings = [
-            ["isDead",10]
+            ["isDead",10],
+            ["isNearDeath",1]
         ]
         this.weightings = new Map()
         for (let i=0; i<tempWeightings.length; i++){
