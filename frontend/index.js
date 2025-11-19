@@ -1315,6 +1315,7 @@ class algoRunner{
         this.currentNode;
         this.targetNode;
         this.mapping = new Map(); //find frontend node from graph node for highlighting
+        this.soundMapping = new Map();
         this.waitTime = 1;
         //path generation parameters
         this.lookahead = 120; //frames to lookahead by
@@ -1360,13 +1361,31 @@ class algoRunner{
             }
         }
         for (let i=0; i<loadedArrows.length; i++){
-            let src = loadedNodes.indexOf(loadedArrows[i].parent)
-            let trg = loadedNodes.indexOf(loadedArrows[i].target)
+            let currentArrow = loadedArrows[i]
+            let src = loadedNodes.indexOf(currentArrow.parent)
+            let trg = loadedNodes.indexOf(currentArrow.target)
             tempEdge = new edge(
                 this.nodes[src],
                 this.nodes[trg]
             )
-            if (loadedArrows[i].state) tempEdge.state=loadedArrows[i].state
+            if (currentArrow.state){ //setup music and copy over state
+                let soundPath = currentArrow.state.get("track")
+                if (soundPath && this.soundMapping.get(soundPath)===undefined){ //if music needs to be loaded
+                    let soundObject = new Howl({
+                        src: [soundPath],
+                        onload: function(){
+                            for (let j=0; j<loadedArrows.length; j++){
+                                let edgeToUpdate = loadedArrows[j]
+                                if (edgeToUpdate.state.get("track")==soundPath){
+                                    edgeToUpdate.state.set("duration",soundObject.duration() * 60)
+                                }
+                            }
+                        }
+                    })
+                    this.soundMapping.set(soundPath,soundObject)
+                }
+                tempEdge.state=currentArrow.state
+            }
             this.edges.push(tempEdge)
         }
         this.graph = new graph(this.nodes,this.edges);
@@ -1401,13 +1420,23 @@ class algoRunner{
         if (this.waitTime==0){
             this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
             if (this.bestPath.length>0){
+
                 let frontendNode = this.mapping.get(this.currentNode)
                 if (this.storedColour!==undefined) frontendNode.setColour(this.storedColour)
                 this.currentNode=this.bestPath[0].target;
                 frontendNode = this.mapping.get(this.currentNode)
                 this.storedColour=frontendNode.spr.colour;
                 frontendNode.setColour("#ffff00")
+
+                //wait for duration of edge
                 this.waitTime=this.bestPath[0].state.get("duration")||30
+
+                //play sound if one associated with the edge taken
+                let soundToPlay = this.soundMapping.get(this.bestPath[0].state.get("track"))
+                if (soundToPlay !== undefined){
+                    soundToPlay.play()
+                }
+
                 for (let [key, value] of this.mapping.entries()){
                     if (value==selection.targetNode && key!=this.targetNode){
                         this.targetNode=key
