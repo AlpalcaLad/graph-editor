@@ -312,13 +312,10 @@ for each possible edge:
 find which edge adds the most value
 return [edge:path]
 */
-function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 5, weightings=new Map()){ //generate a maximal (based on valueFunction) path of preset length
-    //throw an error if trying to generate too short of a length
-    //this should only happen if pathGeneration is called incorrectly
-    if (length < 1) throw new Error("Error: invalid path length requested ("+length.toString()+")")
+function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 120, weightings=new Map()){ //generate a maximal (based on valueFunction) path of preset length
     if (currentNode.edgesOut.length==0) return []; //if dead end just return an empty path
-    //base case, lookahead by 1
-    if (length == 1){
+    //base case
+    if (length <= 0){
         let bestEdge = undefined;
         let bestValue = undefined;
         let tempValue = undefined;
@@ -338,7 +335,7 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let subPath = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ //for each edge, recurse to generate the best path assuming we use that edge
             let e = currentNode.edgesOut[i];
-            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-1,weightings)
+            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-(e.state.get("duration") || 30),weightings)
             subPath.unshift(e) //add edge to start of path array rather than end to order correctly
             tempValue=pathValuer(subPath,targetState,weightings);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options

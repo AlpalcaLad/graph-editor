@@ -1317,7 +1317,7 @@ class algoRunner{
         this.mapping = new Map(); //find frontend node from graph node for highlighting
         this.waitTime = 1;
         //path generation parameters
-        this.lookahead = 5;
+        this.lookahead = 120; //frames to lookahead by
         this.pathValuer = naivePathValuation;
         this.edgeValuer = naiveEdgeValuation;
         //start runner and load graph
@@ -1394,7 +1394,6 @@ class algoRunner{
             let tempNode = this.mapping.get(this.nodes[i])
             tempNode.setColour(blend_colour("#FF4422","#2266FF",booleanDistance(this.nodes[i],this.targetNode)))
             this.storedColour=blend_colour("#FF4422","#2266FF",booleanDistance(this.currentNode,this.targetNode))
-            console.log(this.nodes[i],booleanDistance(this.nodes[i],this.targetNode))
         }
     }
     step(){
