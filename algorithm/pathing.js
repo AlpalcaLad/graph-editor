@@ -234,6 +234,34 @@ function booleanDistance(node1,node2,weightings=new Map()){
     allKeys.forEach(value => {unnormalizedDist/=(2*(weightings.get(value) || 1))});
     return unnormalizedDist// / (2*Math.sqrt(allKeys.length))
 }
+//maps a value to be between -1,1
+function mapToOne(val){
+    if (typeof val == typeof true){
+        return booleanToInt(val)
+    } else { //assume int value in range 0..100
+        if (val===undefined) return 0
+        return (val/50)-1
+    }
+}
+function generalDistance(node1,node2,weightings=new Map()){
+//Calculate the distance between two node's states
+    let summedDistance=0;
+    //create an array with all distinct keys in either node's state
+    let allKeys = [...new Set([...node1.state.keys(), ...node2.state.keys()])] //SOURCE: https://stackoverflow.com/questions/3629817/getting-a-union-of-two-arrays-in-javascript
+    let tempWeight;
+    if (allKeys.length==0) return 0
+    for (let i=0; i<allKeys.length; i++){ //compare each key individually
+        tempWeight = weightings.get(allKeys[i]) || 1
+        summedDistance+=tempWeight*Math.pow((
+            mapToOne(node1.state.get(allKeys[i]))
+            -mapToOne(node2.state.get(allKeys[i]))
+        ),2)
+    }
+    let unnormalizedDist = Math.sqrt(summedDistance)
+    //normalize to be between 0,1 by dividing by the largest possible distance
+    allKeys.forEach(value => {unnormalizedDist/=(2*(weightings.get(value) || 1))}); //normalize distance by dividing by the biggest value this could obtain
+    return unnormalizedDist// / (2*Math.sqrt(allKeys.length))
+}
 //find the state with the smallest boolean distance to the target
 function closestBooleanState(nodes,target,returnIndex=false,weightings=new Map()){
     //safety check for empty node array
@@ -280,7 +308,7 @@ function naivePathValuation(path, targetState=new node(label=-1),weightings=new 
     let costs = path.reduce(function (s,v) {return s+v.state.get("cost") || 0}, 0)/length * (weightings.get("cost")||costWeight);
 
     //average node distance (normalised to be 0-1)
-    let distances = path.reduce(function (s,v) {return s+booleanDistance(v.target,targetState,weightings)}, 0)/length * (weightings.get("distance")||distanceWeight);
+    let distances = path.reduce(function (s,v) {return s+generalDistance(v.target,targetState,weightings)}, 0)/length * (weightings.get("distance")||distanceWeight);
 
     //average of path use counts (not normalised but scaled by 1/10)
     let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length * (weightings.get("uses")||useWeight);
@@ -294,7 +322,7 @@ function naiveEdgeValuation(edge,targetState = new node(label=-1),weightings=new
     let costs = (edge.state.get("cost") || 0) * (weightings.get("cost")||costWeight);
 
     //average node distance (normalised to be 0-1)
-    let distances = booleanDistance(edge.target,targetState,weightings)/length * (weightings.get("distance")||distanceWeight);
+    let distances = generalDistance(edge.target,targetState,weightings)/length * (weightings.get("distance")||distanceWeight);
 
     //average of path use counts (not normalised but scaled by 1/10)
     let uses = (edge.state.get("uses") || 0) /length * (weightings.get("uses")||useWeight);
