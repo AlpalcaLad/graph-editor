@@ -1168,6 +1168,19 @@ function dec_to_hex(decimalArray){
     return value
 }
 
+/*
+
+*/
+function blend_colour(col1,col2,value){
+    let dec1 = hex_to_dec(col1)
+    let dec2 = hex_to_dec(col2)
+    return dec_to_hex([
+        value*dec1[0]+(1-value)*dec2[0],
+        value*dec1[1]+(1-value)*dec2[1],
+        value*dec1[2]+(1-value)*dec2[2]
+    ])
+}
+
 /*random_colour()
 OUTPUT: A random hex colour string of form "#ff00ff"
 */
@@ -1311,6 +1324,7 @@ class algoRunner{
         s.step.push(this); //run every frame
         this.prepare();
         this.setupWeightings();
+        this.storedColour;
     }
     //kill all children and stop running (used when resetting the runner)
     kill(){
@@ -1353,13 +1367,13 @@ class algoRunner{
                 this.nodes[trg]
             )
             if (loadedArrows[i].state) tempEdge.state=loadedArrows[i].state
-            this.nodes.push(tempEdge)
+            this.edges.push(tempEdge)
         }
-        this.graph = new graph(this.nodes,algoEdges);
+        this.graph = new graph(this.nodes,this.edges);
         if (this.currentNode===undefined) this.currentNode=this.nodes[0]
         if (this.targetNode===undefined) this.targetNode=this.nodes[0]
         console.log(this.graph.printAll())
-
+        this.colourNodes();
     }
     setupWeightings(){ //hardcoded values
         let tempWeightings = [
@@ -1375,22 +1389,32 @@ class algoRunner{
         if (this.waitTime>-1) this.waitTime=-1
         else this.waitTime=1
     }
+    colourNodes(){
+        for (let i=0; i<this.nodes.length; i++){
+            let tempNode = this.mapping.get(this.nodes[i])
+            tempNode.setColour(blend_colour("#FF4422","#2266FF",booleanDistance(this.nodes[i],this.targetNode)))
+            this.storedColour=blend_colour("#FF4422","#2266FF",booleanDistance(this.currentNode,this.targetNode))
+            console.log(this.nodes[i],booleanDistance(this.nodes[i],this.targetNode))
+        }
+    }
     step(){
         if (this.waitTime>0) this.waitTime--;
         if (this.waitTime==0){
             this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
             if (this.bestPath.length>0){
                 let frontendNode = this.mapping.get(this.currentNode)
-                frontendNode.setColour("#999999")
+                if (this.storedColour!==undefined) frontendNode.setColour(this.storedColour)
                 this.currentNode=this.bestPath[0].target;
                 frontendNode = this.mapping.get(this.currentNode)
+                this.storedColour=frontendNode.spr.colour;
                 frontendNode.setColour("#ffff00")
                 this.waitTime=this.bestPath[0].state.get("duration")||30
                 for (let [key, value] of this.mapping.entries()){
-                    if (value==selection.targetNode){
+                    if (value==selection.targetNode && key!=this.targetNode){
                         this.targetNode=key
+                        this.colourNodes()
                     }
-                    if (value==selection.currentNode){
+                    if (value==selection.currentNode && key!=this.currentNode){
                         this.currentNode=key
                     }
                 }
