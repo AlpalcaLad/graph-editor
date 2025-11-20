@@ -1,11 +1,4 @@
-1. Arrows display variables as text properties
-2. Arrows save variable states
-3. Nodes save variable states
-4. Nodes display variables as text properties
-5. Node resizing
-
-Project stuffs
-1. In project state editor
-2. Graph traversal algo
-3. Play/Pause buttons that start graph traversal
-4. Arrows play sound in traversal
+TODO list (UPDATED 20/11/2025: 17:15)
+    - construct more examples of larger graphs
+    - reconstruct an actual games music as a graph
+    - crossfading audio clips a little bit to make the transitions more seamless
