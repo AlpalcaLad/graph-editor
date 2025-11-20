@@ -1338,6 +1338,7 @@ class algoRunner{
         }
         delete this;
     }
+    //constructs the algorithm graph representation and preps colours
     prepare(){
         this.waitTime=1
         this.nodes.length=0;
@@ -1348,7 +1349,6 @@ class algoRunner{
         let currentNode;
         let targetNode;
         for (let i=0; i<loadedNodes.length; i++){
-            loadedNodes[i].setColour("#999999")
             tempNode = new node(-1)
             if (loadedNodes[i].state) tempNode.state=loadedNodes[i].state;
             this.nodes.push(tempNode)
@@ -1371,9 +1371,9 @@ class algoRunner{
             if (currentArrow.state){ //setup music and copy over state
                 let soundPath = currentArrow.state.get("track")
                 if (soundPath && this.soundMapping.get(soundPath)===undefined){ //if music needs to be loaded
-                    let soundObject = new Howl({
+                    let soundObject = new Howl({ //create sound object using howler
                         src: [soundPath],
-                        onload: function(){
+                        onload: function(){ //when loaded update the duration variable for any edges for easier viewing
                             for (let j=0; j<loadedArrows.length; j++){
                                 let edgeToUpdate = loadedArrows[j]
                                 if (edgeToUpdate.state.get("track")==soundPath){
@@ -1382,6 +1382,7 @@ class algoRunner{
                             }
                         }
                     })
+                    //this mapping maps a file path name to a sound object
                     this.soundMapping.set(soundPath,soundObject)
                 }
                 tempEdge.state=currentArrow.state
