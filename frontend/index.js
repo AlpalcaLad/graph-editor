@@ -1395,35 +1395,37 @@ class algoRunner{
         console.log(this.graph.printAll())
         this.colourNodes();
     }
-    setupWeightings(){ //hardcoded values
+    setupWeightings(){ //hardcoded values for how much each variable name is weighted as
         let tempWeightings = [
-            ["isDead",10],
-            ["isNearDeath",1]
+            ["isDead",10], //death weighted highly
+            ["isNearDeath",1] //near death weighted lower but still non zero
         ]
         this.weightings = new Map()
         for (let i=0; i<tempWeightings.length; i++){
             this.weightings.set(tempWeightings[i][0],tempWeightings[i][1])
         }
     }
-    togglePause(){
+    togglePause(){ //if paused set delay to -1 so that it doesnt progress
         if (this.waitTime>-1) this.waitTime=-1
-        else this.waitTime=1
+        else this.waitTime=1 //make graph immediately jump to next node and restart counting as normal
     }
     colourNodes(){
-        for (let i=0; i<this.nodes.length; i++){
-            let tempNode = this.mapping.get(this.nodes[i])
-            tempNode.setColour(blend_colour("#FF4422","#2266FF",booleanDistance(this.nodes[i],this.targetNode)))
-            this.storedColour=blend_colour("#FF4422","#2266FF",booleanDistance(this.currentNode,this.targetNode))
-        }
+        for (let i=0; i<this.nodes.length; i++){ //for each node colour based on distance to target
+            let tempNode = this.mapping.get(this.nodes[i]) //use the mapping to get the frontend node corrosponding to the backend one
+            tempNode.setColour(blend_colour("#FF4422","#2266FF",booleanDistance(this.nodes[i],this.targetNode))) //set the frontend node's colour
+        } 
+        //update the stored colour to make sure it's still accurate
+        this.storedColour=blend_colour("#FF4422","#2266FF",booleanDistance(this.currentNode,this.targetNode))
     }
     step(){
         if (this.waitTime>0) this.waitTime--;
         if (this.waitTime==0){
             this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
             if (this.bestPath.length>0){
-
+                //update previous node to restore its colour
                 let frontendNode = this.mapping.get(this.currentNode)
                 if (this.storedColour!==undefined) frontendNode.setColour(this.storedColour)
+                //colour new node yellow, storing its old colour for later to avoid unneccessary computation
                 this.currentNode=this.bestPath[0].target;
                 frontendNode = this.mapping.get(this.currentNode)
                 this.storedColour=frontendNode.spr.colour;
@@ -1437,11 +1439,12 @@ class algoRunner{
                 if (soundToPlay !== undefined){
                     soundToPlay.play()
                 }
-
+                
+                //check if target or current node updated on the frontend and if so apply to the backend
                 for (let [key, value] of this.mapping.entries()){
                     if (value==selection.targetNode && key!=this.targetNode){
                         this.targetNode=key
-                        this.colourNodes()
+                        this.colourNodes() //recolour to reflect new target
                     }
                     if (value==selection.currentNode && key!=this.currentNode){
                         this.currentNode=key
