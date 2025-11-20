@@ -2,3 +2,4 @@ TODO list (UPDATED 20/11/2025: 17:15)
     - construct more examples of larger graphs
     - reconstruct an actual games music as a graph
     - crossfading audio clips a little bit to make the transitions more seamless
+    - path use consideration
