@@ -534,6 +534,10 @@ class nodeBase{
         if (ind!=-1){
             m.leftclickListeners.splice(ind,1)
         }
+        ind = loadedNodes.indexOf(this)
+        if (ind!=-1){
+            loadedNodes.splice(ind,1)
+        }
         this.spr.kill()
         delete this
     }
@@ -1265,6 +1269,7 @@ window.addEventListener("keydown", function (event) {
         case "x":
             if (selection.selected !== undefined){
                 selection.selected.kill();
+                selection.onChange(nearestObjectToMouse())
             }
             break;
 
