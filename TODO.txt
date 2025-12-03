@@ -3,3 +3,8 @@ TODO list (UPDATED 20/11/2025: 17:15)
     - reconstruct an actual games music as a graph
     - crossfading audio clips a little bit to make the transitions more seamless
     - path use consideration
+
+For testing:
+track:../music/example1/simple_chords_1.mp3
+track:../music/example1/chords_melody_1.mp3
+track:../music/example1/bridge_1.mp3

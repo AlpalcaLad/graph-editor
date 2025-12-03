@@ -2,6 +2,8 @@ from pydub import AudioSegment
 from pydub.utils import make_chunks
 import sys
 
+## requires winget install ffmpeg
+
 def smartSplit(audioPath : str, trackCount : int = 10, granularity : int = 250) -> list:
     #granularity is how many sub tracks to create before merging
     audioObject = AudioSegment.from_file(audioPath,audioPath.split(".")[-1])
@@ -18,30 +20,39 @@ def smartSplit(audioPath : str, trackCount : int = 10, granularity : int = 250) 
     scan from that point +- 0.25*audiolength/trackcount
     value of choice is 1/xdistance/amplitude
     '''
-
+    trackCount+=1
     amplitudes = [chunk.max for chunk in chunks]
     biggerChunks = [AudioSegment.empty() for x in range(trackCount)]
     borderSize = int(granularity/trackCount/4)
     lastIndex = 0
-    for i in range(trackCount):
-        centerPoint = (i/trackCount)*granularity
+    for i in range(1,trackCount-1):
+        centerPoint = int(((i)/(trackCount))*granularity)
         leftPoint = centerPoint-borderSize
         rightPoint = centerPoint+borderSize
-        bestValue = 0
+        bestValue = -1
         bestIndex = 0
         for j in range(leftPoint,rightPoint):
-            value = 1 / (abs(centerPoint-j)/abs(centerPoint-leftPoint)) / (amplitudes[j].max/audioObject.max)
-            if value>bestValue:
+            cost = (abs(centerPoint-j)/abs(centerPoint-leftPoint)) * pow(amplitudes[j]/audioObject.max,2)
+            if bestValue == -1 or cost<bestValue:
                 bestIndex=j
-                bestValue=value
+                bestValue=cost
         for j in range(lastIndex,bestIndex):
             biggerChunks[i] += chunks[j]
         lastIndex = bestIndex
-    print(biggerChunks)
+    #final track uses all remaining sound bytes
+    for i in range(lastIndex,granularity+1):
+        biggerChunks[-1] += chunks[i]
 
-if len(sys.argv==2):
+    audioPathChunks = audioPath.split(".")
+    audioPathExcludingExtention = ".".join(audioPathChunks[:-1])
+    audioPathExtention = audioPathChunks[-1]
+
+    for i in range(1,len(biggerChunks)):
+        biggerChunks[i].export(audioPathExcludingExtention+"_"+str(i)+"."+audioPathExtention,format="mp3")
+
+if len(sys.argv)==2:
     smartSplit(sys.argv[1])
-elif len(sys.argv==3):
+elif len(sys.argv)==3:
     smartSplit(sys.argv[1],sys.argv[2])
-elif len(sys.argv==4):
+elif len(sys.argv)==4:
     smartSplit(sys.argv[1],sys.argv[2],sys.argv[3])

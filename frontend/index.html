@@ -17,7 +17,7 @@
         <form onsubmit="event.preventDefault(); processAlgorithm();"><input type="submit" id="algo" value="Test Algo"></form>
         <form onsubmit="event.preventDefault(); runner.togglePause();"><input type="submit" id="algo" value="Pause"></form>
         <form onsubmit="event.preventDefault(); selection.update(this['state'].value);">
-            <input id="stateSelection" type="text" name="state" value="stateName:stateValue">
+            <input size="50" id="stateSelection" type="text" name="state" value="stateName:stateValue">
             <input type="submit" id="output" value="Update">
         </form>
         <form onsubmit="event.preventDefault(); selection.selectNode(false);"><input type="submit" id="algo" value="Set Current Node"></form>

@@ -1403,8 +1403,10 @@ class algoRunner{
     setupWeightings(){ //hardcoded values for how much each variable name is weighted as
         let tempWeightings = [
             ["isDead",10], //death weighted highly
-            ["isNearDeath",1] //near death weighted lower but still non zero
-            ["track",0] //don't think about the music track when doing distance
+            ["isNearDeath",1], //near death weighted lower but still non zero
+            ["track",0], //don't think about the music track when doing distance
+            ["duration",0],
+            ["urgent",10]
         ]
         this.weightings = new Map()
         for (let i=0; i<tempWeightings.length; i++){
