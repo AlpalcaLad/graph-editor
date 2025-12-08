@@ -293,11 +293,11 @@ Sum of path costs, sum of node distances along path, length, sum of path use cou
 //constants for naive path/edge valuation
 const costWeight = 1/100
 const distanceWeight = 1
-const useWeight = 1/10
+const useWeight = 2 //weight uses higher
 
 //need both path and edge valuation as in some metrics these may be different
 //for example a metric may weight immediate states higher than future ones
-function naivePathValuation(path, targetState=new node(label=-1),weightings=new Map()){
+function naivePathValuation(path, targetState=new node(label=-1),weightings=new Map(), history=[]){
     //calculate value factors
     //using source https://stackoverflow.com/questions/48606852/javascript-reduce-sum-array-with-undefined-values
     //length (naively assume number of edges)
@@ -310,22 +310,40 @@ function naivePathValuation(path, targetState=new node(label=-1),weightings=new 
     //average node distance (normalised to be 0-1)
     let distances = path.reduce(function (s,v) {return s+generalDistance(v.target,targetState,weightings)}, 0)/length * (weightings.get("distance")||distanceWeight);
 
-    //average of path use counts (not normalised but scaled by 1/10)
-    let uses = path.reduce(function (s,v) {return s+v.state.get("uses") || 0}, 0)/length * (weightings.get("uses")||useWeight);
+    let uses = 0
+    //naive algorithm weights all edge uses equally
+    for (edgeUsed of history){
+        if (path.includes(edgeUsed)){
+            uses += 1
+        }
+    }
+    //normalize to be between 0,1
+    uses /= history.length || 1 // ||1 to avoid division by 0
+    //apply use weighting
+    uses *= (weightings.get("uses") || useWeight)
 
     //apply formula (currently very naive)
     return 1-costs-distances-uses
 }
 
-function naiveEdgeValuation(edge,targetState = new node(label=-1),weightings=new Map()){
+function naiveEdgeValuation(edge,targetState = new node(label=-1),weightings=new Map(), history=[]){
     //average path cost (normalised assuming cost is between 0-100)
     let costs = (edge.state.get("cost") || 0) * (weightings.get("cost")||costWeight);
 
     //average node distance (normalised to be 0-1)
     let distances = generalDistance(edge.target,targetState,weightings)/length * (weightings.get("distance")||distanceWeight);
 
-    //average of path use counts (not normalised but scaled by 1/10)
-    let uses = (edge.state.get("uses") || 0) /length * (weightings.get("uses")||useWeight);
+    let uses = 0
+    //naive algorithm weights all edge uses equally
+    for (edgeUsed of history){
+        if (edgeUsed==edge){
+            uses += 1
+        }
+    }
+    //normalize to be between 0,1
+    uses /= history.length || 1 // ||1 to avoid division by 0
+    //apply use weighting
+    uses *= (weightings.get("uses") || useWeight)
 
     //apply formula (currently very naive)
     return 1-costs-distances-uses
@@ -340,7 +358,7 @@ for each possible edge:
 find which edge adds the most value
 return [edge:path]
 */
-function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 120, weightings=new Map()){ //generate a maximal (based on valueFunction) path of preset length
+function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new node(label=-1), length = 120, weightings=new Map(), history=[]){ //generate a maximal (based on valueFunction) path of preset length
     if (currentNode.edgesOut.length==0) return []; //if dead end just return an empty path
     //base case
     if (length <= 0){
@@ -349,7 +367,7 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let tempValue = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ // compare each possible edges value
             let e = currentNode.edgesOut[i];
-            tempValue=edgeValuer(e,targetState,weightings);
+            tempValue=edgeValuer(e,targetState,weightings, history);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestEdge=e;
@@ -363,9 +381,9 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let subPath = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ //for each edge, recurse to generate the best path assuming we use that edge
             let e = currentNode.edgesOut[i];
-            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-(e.state.get("duration") || 0),weightings)
+            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-(e.state.get("duration") || 0),weightings, history)
             subPath.unshift(e) //add edge to start of path array rather than end to order correctly
-            tempValue=pathValuer(subPath,targetState,weightings);
+            tempValue=pathValuer(subPath,targetState,weightings, history);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options
                 bestValue=tempValue;
                 bestPath=subPath;

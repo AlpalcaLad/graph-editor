@@ -838,7 +838,8 @@ class selectionScreen{
     update(stateString){
         let sepArray = stateString.split(":")
         if (this.selected!==undefined && sepArray.length==2){
-            if (sepArray[1]=="true"){
+            if (sepArray[1]==""){this.selected.state.delete(sepArray[0])}
+            else if (sepArray[1]=="true"){
                 this.selected.state.set(sepArray[0],true) //boolean
             } else if (sepArray[1]=="false"){
                 this.selected.state.set(sepArray[0],false) //boolean
@@ -861,7 +862,7 @@ const arrowFromNodeDist=4
 const headLength = 20;
 const headWidth = 6;
 class arrow{
-    constructor(parent,target=parent,colour="#000000",directed=true,state=new Map()){
+    constructor(parent,target=parent,colour="#000000",directed=true,state=new Map([["duration",30]])){
         this.parent=parent;
         this.target=target;
         this.colour=colour;
@@ -1331,6 +1332,8 @@ class algoRunner{
         this.prepare();
         this.setupWeightings();
         this.storedColour;
+        this.historyMax = 20;
+        this.history = []; //keep track of last {historyMax} egdes taken to penalize them
     }
     //kill all children and stop running (used when resetting the runner)
     kill(){
@@ -1401,12 +1404,15 @@ class algoRunner{
         this.colourNodes();
     }
     setupWeightings(){ //hardcoded values for how much each variable name is weighted as
-        let tempWeightings = [
+        let tempWeightings = [ //these just give weighting to some labels an example graph may use
+            //ideally in future a composer would pick these but for now they are hardcoded
             ["isDead",10], //death weighted highly
             ["isNearDeath",1], //near death weighted lower but still non zero
             ["track",0], //don't think about the music track when doing distance
-            ["duration",0],
-            ["urgent",10]
+            ["duration",0], //equally dont consider duration of an edge
+            ["urgent",10], //urgent label as alternative to isDead
+            ["variation",4], //stronger weighted label to try force variation
+            ["useLess",0.01] //avoid but not at the cost of other states being wrong
         ]
         this.weightings = new Map()
         for (let i=0; i<tempWeightings.length; i++){
@@ -1428,13 +1434,17 @@ class algoRunner{
     step(){
         if (this.waitTime>0) this.waitTime--;
         if (this.waitTime==0){
-            this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings);
+            this.bestPath = pathGeneration(this.edgeValuer,this.pathValuer,this.currentNode,this.targetNode,this.lookahead,this.weightings, this.history);
             if (this.bestPath.length>0){
                 //update previous node to restore its colour
                 let frontendNode = this.mapping.get(this.currentNode)
                 if (this.storedColour!==undefined) frontendNode.setColour(this.storedColour)
                 //colour new node yellow, storing its old colour for later to avoid unneccessary computation
                 this.currentNode=this.bestPath[0].target;
+                this.history.push(this.bestPath[0])
+                if (this.history.length>this.historyMax){
+                    this.history.shift() //remove oldest edge from history
+                }
                 frontendNode = this.mapping.get(this.currentNode)
                 this.storedColour=frontendNode.spr.colour;
                 frontendNode.setColour("#ffff00")

@@ -1,0 +1,9 @@
+0~x>528|y>336~target>4|duration>30
+1~x>338|y>412~target>0|duration>30
+2~x>341|y>600~target>1|duration>30,target>6|duration>30
+3~x>648|y>666~target>5|duration>30
+4~x>713|y>459~target>3|duration>30
+5~x>494|y>730~target>2|duration>30
+6~x>51|y>635|useLess>true~target>7|duration>30
+7~x>-76|y>460~target>8|duration>30
+8~x>78|y>354~target>2|duration>30
