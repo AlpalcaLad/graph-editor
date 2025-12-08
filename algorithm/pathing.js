@@ -363,7 +363,7 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = new n
         let subPath = undefined;
         for (let i=0; i<currentNode.edgesOut.length; i++){ //for each edge, recurse to generate the best path assuming we use that edge
             let e = currentNode.edgesOut[i];
-            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-(e.state.get("duration") || 30),weightings)
+            subPath = pathGeneration(edgeValuer,pathValuer,e.target,targetState,length-(e.state.get("duration") || 0),weightings)
             subPath.unshift(e) //add edge to start of path array rather than end to order correctly
             tempValue=pathValuer(subPath,targetState,weightings);
             if (bestValue===undefined || tempValue>bestValue){ //we accept the first edge by default and then only take better options

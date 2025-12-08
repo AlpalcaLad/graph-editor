@@ -1440,7 +1440,7 @@ class algoRunner{
                 frontendNode.setColour("#ffff00")
 
                 //wait for duration of edge
-                this.waitTime=this.bestPath[0].state.get("duration")||30
+                this.waitTime=this.bestPath[0].state.get("duration")||0
 
                 //play sound if one associated with the edge taken
                 let soundToPlay = this.soundMapping.get(this.bestPath[0].state.get("track"))
