@@ -1,0 +1,5 @@
+shader_set(bloodOnHits)
+var u_hits = shader_get_uniform(bloodOnHits,"hits")
+shader_set_uniform_f_array(u_hits,hits)
+draw_self()
+shader_reset()
