@@ -24,15 +24,19 @@ if !place_meeting(x+32*sign(hsp),y+5,wall_virtual){
 vsp += grv
 
 if place_meeting(x+hsp,y,wall_virtual){
-	while !place_meeting(x+sign(hsp),y,wall_virtual){
-		x += sign(hsp)
+	if abs(hsp)>1{
+		while !place_meeting(x+sign(hsp),y,wall_virtual){
+			x += sign(hsp)
+		}
 	}
 	hsp = 0
 }
 
 if place_meeting(x,y+vsp,wall_virtual){
-	while !place_meeting(x,y+sign(vsp),wall_virtual){
-		y += sign(vsp)
+	if abs(vsp)>1{
+		while !place_meeting(x,y+sign(vsp),wall_virtual){
+			y += sign(vsp)
+		}
 	}
 	vsp = 0
 }

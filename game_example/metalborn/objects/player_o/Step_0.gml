@@ -97,7 +97,7 @@ if hsp!=0{
 		footstepDelay--
 		if footstepDelay<0{
 			footstepDelay=max(15-hsp,5)
-			audio_play_sound(footstep_snd,1,false,1,0,random_range(0.8,1.2))
+			audio_play_sound(footstep_snd,1,false,0.6,0,random_range(0.8,1.2))
 		}
 	}
 } else {

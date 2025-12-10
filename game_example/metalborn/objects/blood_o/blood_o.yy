@@ -1,15 +1,16 @@
 {
   "$GMObject":"",
-  "%Name":"movable_o",
+  "%Name":"blood_o",
   "eventList":[
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"movable_o",
+  "name":"blood_o",
   "overriddenProperties":[],
   "parent":{
-    "name":"entities",
-    "path":"folders/objects/entities.yy",
+    "name":"effects",
+    "path":"folders/objects/effects.yy",
   },
   "parentObjectId":null,
   "persistent":false,
@@ -30,9 +31,9 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"empty_yellow",
-    "path":"sprites/empty_yellow/empty_yellow.yy",
+    "name":"blood_s",
+    "path":"sprites/blood_s/blood_s.yy",
   },
   "spriteMaskId":null,
-  "visible":false,
+  "visible":true,
 }

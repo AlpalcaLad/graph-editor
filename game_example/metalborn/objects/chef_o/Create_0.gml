@@ -10,4 +10,7 @@ grv = 0.1
 playerFarRange = 64
 playerNearRange = 24
 
-hits = array_create(25,false)
+hits = array_create(25,0)
+spriteSize = [sprite_width,sprite_height]
+
+hitEffect = blood_o
