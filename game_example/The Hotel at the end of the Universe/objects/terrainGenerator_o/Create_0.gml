@@ -163,7 +163,7 @@ if islandType=="litwalls"{
 		tilemap_set_at_pixel(tilemap_id,3,surface_points[i][0],max_y-tile_size*roofheight)
 		if i>1 and i<surface_point_num-2{
 			sinceLight-=1
-			if sinceLight<0{
+			if sinceLight<0 && i<surface_point_num-4{
 				sinceLight=3
 				instance_create_layer(surface_points[i][0]+tile_size/2,max_y-tile_size*roofheight+tile_size*2,"backEffects",litWindow_o)
 			}

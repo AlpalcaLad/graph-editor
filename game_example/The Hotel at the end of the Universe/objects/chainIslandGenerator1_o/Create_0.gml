@@ -6,7 +6,7 @@ while chainLength>0{
 	var newTerrain = instance_create_layer(xSpawn,ySpawn,layer,terrainGenerator_o)
 	xSpawn=newTerrain.finalCoord[0]+16
 	ySpawn=newTerrain.finalCoord[1]
-	if newTerrain.islandType!="double roof" && !lastWasIsland and irandom(10)<7{
+	if newTerrain.islandType!="doubleroof" && newTerrain.islandType!="litwalls" && !lastWasIsland and irandom(10)<7{
 		lastWasIsland=true
 		var island = instance_create_layer(xSpawn,ySpawn-128,layer,islandGenerator1_o)
 		ladderCoord=island.ladderCoord
