@@ -1,0 +1,1 @@
+flashTime=3/client_o.time_speed

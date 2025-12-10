@@ -1,0 +1,1 @@
+image_speed = random_range(1,1.4)*client_o.time_speed

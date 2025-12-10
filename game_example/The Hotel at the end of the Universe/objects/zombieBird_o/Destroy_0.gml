@@ -1,0 +1,1 @@
+instance_create_layer(x,y,layer,zombieBirdDeath_o).image_xscale=image_xscale

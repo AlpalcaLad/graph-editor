@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"blend_angles",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"blend_angles",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

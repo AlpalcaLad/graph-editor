@@ -1,0 +1,6 @@
+draw_set_color(c_black)
+draw_set_alpha(clamp((10-exist)/10,0,1))
+draw_rectangle(0,0,w,40,false)
+draw_rectangle(0,h,w,h-60-40*(array_length(drawText)+1),false)
+draw_set_alpha(1)
+draw_set_color(c_white)
