@@ -238,7 +238,7 @@ class scheduler{
         //to remove themselves from these arrays
         this.step = [];
         this.draw = [];
-        this.frameRate=60; //already handled by requestAnimation Frame
+        this.frameRate=60;
         //TODO update frameRate to reflect monitor refresh rate
         this.elapsed=0; //seconds elapsed in program
         this.debugMode=true;
@@ -254,6 +254,8 @@ class scheduler{
     }
 
     tick(){ //every frame
+        setTimeout(this.tick, 1000/ this.frameRate)
+        //window.requestAnimationFrame(this.tick) //reruns function at rate of monitor refresh rate/second
         //reset canvas (js uses quick drying pixels)
         //ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#FFFFFF"; // without alpha
@@ -263,7 +265,6 @@ class scheduler{
         //run all draw events
         this.runDraw();
         //schedule this for next frame
-        window.requestAnimationFrame(this.tick) //reruns function at rate of monitor refresh rate/second
     }
 
     runStep(){
@@ -292,12 +293,13 @@ const s = new scheduler();
 //redefine that object's tick to point to the static reference
 //not quite sure why, but this prevents a crash
 s.tick=function(){
+    setTimeout(s.tick, 1000/ s.frameRate)
+    //window.requestAnimationFrame(s.tick) //reruns function at rate of monitor refresh rate/second
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#FFFFFF"; // without alpha
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     s.runStep();
     s.runDraw();
-    window.requestAnimationFrame(s.tick) //reruns function at rate of monitor refresh rate/second
 }
 //endregion
 

@@ -8,3 +8,4 @@ For testing:
 track:../music/example1/simple_chords_1.mp3
 track:../music/example1/chords_melody_1.mp3
 track:../music/example1/bridge_1.mp3
+track:../game_example/music/ende-turfwar_1.mp3
