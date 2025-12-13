@@ -1335,7 +1335,7 @@ class algoRunner{
         this.soundMapping = new Map();
         this.waitTime = 1;
         //path generation parameters
-        this.lookahead = 120; //frames to lookahead by
+        this.lookahead = 600; //frames to lookahead by
         this.pathValuer = naivePathValuation;
         this.edgeValuer = naiveEdgeValuation;
         //start runner and load graph
@@ -1343,7 +1343,7 @@ class algoRunner{
         this.prepare();
         this.setupWeightings();
         this.storedColour;
-        this.historyMax = 20;
+        this.historyMax = 0;
         this.history = []; //keep track of last {historyMax} egdes taken to penalize them
     }
     //kill all children and stop running (used when resetting the runner)
