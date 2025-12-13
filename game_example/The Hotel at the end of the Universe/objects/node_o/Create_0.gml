@@ -1,0 +1,3 @@
+state = {}
+edgesIn=[]
+edgesOut=[]

@@ -1237,6 +1237,15 @@ function nearestObjectToMouse(){
     return bestObject;
 }
 
+//button to apply 0.5s duration to all edges with duration 0
+function applyDefaultDuration(){
+    for (var i=0; i<loadedArrows.length; i++){
+        if (loadedArrows[i].state.get("duration")==undefined){
+            loadedArrows[i].state.set("duration",30)
+        } 
+    }
+}
+
 //region Listeners
 window.addEventListener("wheel", event => {
     const delta = Math.sign(event.deltaY);

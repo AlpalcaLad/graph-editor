@@ -14,6 +14,7 @@
         </form>
         </div>
         <div style="display: flex; gap: 20px">
+        <form onsubmit="event.preventDefault(); applyDefaultDuration();"><input type="submit" id="algo" value="Reset 0 duration edges"></form>
         <form onsubmit="event.preventDefault(); processAlgorithm();"><input type="submit" id="algo" value="Test Algo"></form>
         <form onsubmit="event.preventDefault(); runner.togglePause();"><input type="submit" id="algo" value="Pause"></form>
         <form onsubmit="event.preventDefault(); selection.update(this['state'].value);">
