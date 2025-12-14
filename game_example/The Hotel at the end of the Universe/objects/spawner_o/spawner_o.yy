@@ -31,9 +31,9 @@
   "physicsShapePoints":[],
   "physicsStartAwake":true,
   "properties":[
-    {"$GMObjectProperty":"v2","%Name":"monster","filters":[],"listItems":[],"multiselect":false,"name":"monster","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resource":null,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"zombie_o","varType":5,},
-    {"$GMObjectProperty":"v2","%Name":"spawnDelay","filters":[],"listItems":[],"multiselect":false,"name":"spawnDelay","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resource":null,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"180","varType":0,},
-    {"$GMObjectProperty":"v2","%Name":"maxEnemies","filters":[],"listItems":[],"multiselect":false,"name":"maxEnemies","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resource":null,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"8","varType":0,},
+    {"$GMObjectProperty":"v2","%Name":"monster","filters":[],"listItems":[],"multiselect":false,"name":"monster","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resource":{"name":"zombie_o","path":"objects/zombie_o/zombie_o.yy",},"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"zombie_o","varType":5,},
+    {"$GMObjectProperty":"v2","%Name":"spawnDelay","filters":[],"listItems":[],"multiselect":false,"name":"spawnDelay","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"180","varType":0,},
+    {"$GMObjectProperty":"v2","%Name":"maxEnemies","filters":[],"listItems":[],"multiselect":false,"name":"maxEnemies","rangeEnabled":false,"rangeMax":10.0,"rangeMin":0.0,"resourceType":"GMObjectProperty","resourceVersion":"2.0","value":"8","varType":0,},
   ],
   "resourceType":"GMObject",
   "resourceVersion":"2.0",

@@ -15,6 +15,7 @@ if position_meeting(x,y-16,player_o) and active{
 	player_o.hsp=0
 	player_o.vsp=0
 	player_o.sprite_index=playerDestroySpawnerTop_s
+	player_o.readyToDestroy=false
 	camera_o.follow=self
 	camera_o.targetZoom=0.4
 }

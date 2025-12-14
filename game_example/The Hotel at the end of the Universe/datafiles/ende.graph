@@ -1,0 +1,5 @@
+0~x>229|y>293|isNearSpawner>false|intense>false~target>0|duration>228|track>ende_1,target>4|duration>228|track>ende_3
+1~x>785|y>288|isNearSpawner>true~target>1|duration>456|track>ende_8,target>2|duration>210|track>ende_10
+2~x>575|y>531|isNearSpawner>true|isVeryNearSpawner>true~target>2|duration>180|track>ende_9,target>3|duration>510|track>ende_11
+3~x>239|y>532|isNearSpawner>true|isVeryNearSpawner>true|killingSpawner>true~target>0|duration>450|track>ende_12
+4~x>500|y>290|isNearSpawner>false|intense>true~target>4|duration>228|track>ende_5,target>1|duration>24|track>ende_7

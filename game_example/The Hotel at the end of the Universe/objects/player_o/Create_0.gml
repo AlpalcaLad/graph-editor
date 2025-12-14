@@ -37,6 +37,7 @@ slideDustDl=0
 slideDustDlMax=1
 hitFrames=0
 invulnFrames=0
+readyToDestroy=false
 //inputs
 r=0
 l=0

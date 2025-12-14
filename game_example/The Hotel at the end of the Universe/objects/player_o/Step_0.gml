@@ -235,6 +235,7 @@ if !controlling{
 		image_speed=0
 	} else {
 		image_speed=1.5
+		if !readyToDestroy && image_index>9 image_speed = 0
 		drawAng=blend_angles(drawAng,0,2*client_o.time_speed)
 	}
 }

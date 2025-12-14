@@ -11,6 +11,15 @@
 
 
 //maps a value to be between -1,1
+function processString(str){
+	if (str=="false") return false
+	if (str=="true") return true
+	
+	var n = string_length(string_digits(str));
+	if n && n == string_length(str) - (string_char_at(str, 1) == "-") - (string_pos(".", str) != 0) return real(str)
+
+	return str
+}
 function mapToOne(val){
 	if is_undefined(val) return 0
 	
@@ -38,11 +47,11 @@ function generalDistance(node1,node2,weightings={}){
     }
     var unnormalizedDist = sqrt(summedDistance)
     //normalize to be between 0,1 by dividing by the largest possible distance
-	for (var i=0; i<length; i++){
-		if variable_struct_exists(weightings,allKeys[i]) tempWeight = variable_struct_get(weightings,allKeys[i])
-		else tempWeight = 1
-		unnormalizedDist/=2*tempWeight
-	}
+	//for (var i=0; i<length; i++){
+	//	if variable_struct_exists(weightings,allKeys[i]) tempWeight = variable_struct_get(weightings,allKeys[i])
+	//	else tempWeight = 1
+	//	unnormalizedDist/=2*tempWeight
+	//}
     return unnormalizedDist
 }
 
@@ -68,7 +77,7 @@ function naivePathValuation(path, targetState={}, weightings={}, history=[]){
     //average node distance (normalised to be 0-1)
     var avDist = 0
 	for (var i=0; i<length; i++){
-		//TODO general distance
+		avDist+=generalDistance(path[i].target,targetState,weightings)
 	}
 	avDist/=length
 	if variable_struct_exists(weightings,"distance") avDist*=variable_struct_get(weightings,"distance")
@@ -92,7 +101,7 @@ function naivePathValuation(path, targetState={}, weightings={}, history=[]){
 }
 
 function naiveEdgeValuation(edge, targetState={}, weightings={}, history=[]){
-    //average path cost (normalised assuming cost is between 0-100)
+    //edge cost (normalised assuming cost is between 0-100)
 	var costs
 	if variable_struct_exists(edge.state,"cost"){
 		costs = variable_struct_get(edge.state,"cost")
@@ -101,9 +110,7 @@ function naiveEdgeValuation(edge, targetState={}, weightings={}, history=[]){
 	}
 	else costs = 0
 
-    //average node distance (normalised to be 0-1)
-	var distances
-    //TODO general distance
+	var distance = generalDistance(edge.target,targetState,weightings)
 
     var uses = 0
     //naive algorithm weights all edge uses equally
@@ -117,7 +124,7 @@ function naiveEdgeValuation(edge, targetState={}, weightings={}, history=[]){
 	else uses*=useWeight
 
     //apply formula (currently very naive)
-    return 1-costs-distances-uses
+    return 1-costs-distance-uses
 }
 
 //Generate a path using given value functions
