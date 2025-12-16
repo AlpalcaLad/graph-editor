@@ -19,12 +19,12 @@ To use the algorithm in your own gamemaker game: use "add existing" to add algor
 
 # Provided Tools
 
-## frontend editor
+## Frontend Editor
 ### Controls
 **Middle click**:   drag camera <br>
 **Left single click**:   create / connect arrow <br>
 **Left held click**:   drag node <br>
-**n**:   create new blank node at mouse pointer
+**n**:   create new blank node at mouse pointer <br>
 **s**:   select nearest arrow/nodeand open sidebar <br>
 **x**:   delete selected node <br>
 **d**:   deselect <br>
@@ -57,7 +57,7 @@ let tempWeightings = [ //these just give weighting to some labels an example gra
 ]
 ```
 
-## audio splitters
+## Audio Splitters
 The project contains a few python programs to segment an mp3 file for ease. (It should also accept wavs but this is untested) <br>
 You will need to have ffmpeg downloaded on your computer to use these on mp3 files. This can be found at https://ffmpeg.org <br>
 Please also note the py may differ on your system and could be python or python3 <br> <br>
@@ -71,7 +71,7 @@ Please also note the py may differ on your system and could be python or python3
 ```e.g. py -m autoAudioSplitter D:/GitHub/graph-editor/music/example1/simple_chords.mp3```<br>
 I recommend just using manual splitter where possible
 
-# Frequent problems and fixes
+# Frequent problems and Fixes
 **Graph crashes when run**:<br>
 There should be output viewable through inspect element. If it mentions call stack there is likely a 0 cost loop and Reset 0 duration edges should be used <br>
 **The game crashes with the error "music cannot be found"**: <br>
