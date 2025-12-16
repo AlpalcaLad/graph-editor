@@ -9,6 +9,7 @@ if !audio_is_playing(currentTrack){ //currently not using duration, may be overs
 		var edgeTaken = array_shift(musicQueue)
 		currentTrack = asset_get_index(variable_struct_get(edgeTaken.state,"track"))
 		currentNode = edgeTaken.target
+		show_debug_message("."+variable_struct_get(edgeTaken.state,"track")+".")
 		if currentTrack!=-1 audio_play_sound(currentTrack,1,false,1)
 		else show_error("couldnt find sound!",true)
 		array_push(history,currentTrack)
@@ -26,7 +27,6 @@ with player_o{
 		}
 	}
 	if dist == -1 dist = 999
-	show_debug_message(dist)
 	variable_struct_set(other.targetState.state,"isNearSpawner",dist<128)
 	variable_struct_set(other.targetState.state,"isVeryNearSpawner",dist<64)
 	variable_struct_set(other.targetState.state,"killingSpawner",cutscening)
