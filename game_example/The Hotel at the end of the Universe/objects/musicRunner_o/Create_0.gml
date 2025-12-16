@@ -8,7 +8,7 @@ while !file_text_eof(fileObj){
 	//each node line string is kept in n
 	var n = file_text_readln(fileObj)
 	n = string_replace_all(n, "\u000A", ""); //remove new line chars
-	n = string_replace_all(n, "\u000D", ""); //remove new line chars
+	n = string_replace_all(n, "\u000D", ""); //remove new line chars -- why do files even still use these??
 	n = clean_text(n)
 	//setup node struct
 	var node = instance_create_layer(x,y,layer,node_o)
