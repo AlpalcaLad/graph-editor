@@ -59,6 +59,7 @@ let tempWeightings = [ //these just give weighting to some labels an example gra
 
 ## audio splitters
 The project contains a few python programs to segment an mp3 file for ease. (It should also accept wavs but this is untested) <br>
+You will need to have ffmpeg downloaded on your computer to use these on mp3 files. This can be found at https://ffmpeg.org <br>
 Please also note the py may differ on your system and could be python or python3 <br> <br>
 **Manual Splitter**: Provide seconds to split at <br>
 ```py -m manualSplit audioPath splitAtSecond1 splitAtSecond2 ...``` <br>
