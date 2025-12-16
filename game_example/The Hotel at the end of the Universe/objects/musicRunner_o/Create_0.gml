@@ -2,7 +2,8 @@ nodes = []
 edges = []
 
 //TODO LOAD FILE
-var fileObj = file_text_open_read("ende.graph")
+graphPath = "ende.graph"
+var fileObj = file_text_open_read(graphPath)
 reservedStates=["x","y"] //states to be ignored, used by frontend
 while !file_text_eof(fileObj){
 	//each node line string is kept in n
