@@ -173,3 +173,19 @@ function pathGeneration(edgeValuer, pathValuer, currentNode, targetState = {}, l
         return bestPath
     }
 }
+
+//loop through string removing any characters not in whitelist string
+//used to sanitise inputs loaded from graph
+function clean_text(str) 
+{
+    var whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.1234567890/~,>|"
+	var char
+    for(var i=1; i<string_length(str); i++)
+    {
+        char=string_char_at(str,i);
+        if string_pos(char,whitelist)==0 {
+            str=string_replace_all(str,char,"");
+        }
+    }
+    return str;
+}

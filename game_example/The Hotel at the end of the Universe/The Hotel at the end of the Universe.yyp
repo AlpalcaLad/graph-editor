@@ -69,7 +69,6 @@
   "ForcedPrefabProjectReferences":[],
   "IncludedFiles":[
     {"$GMIncludedFile":"","%Name":"ende.graph","CopyToMask":-1,"filePath":"datafiles","name":"ende.graph","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"ende.txt","CopyToMask":0,"filePath":"datafiles","name":"ende.txt","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
   ],
   "isEcma":false,
   "LibraryEmitters":[],
