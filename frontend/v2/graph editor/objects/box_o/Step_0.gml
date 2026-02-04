@@ -41,7 +41,6 @@ if highlighted{
 				keyboard_string = containedText[selectedIndex]
 			}
 			changeLnDl = true
-			
 		}
 		if keyboard_check(vk_up){
 			if selectedIndex>0{
@@ -64,6 +63,3 @@ if highlighted{
 		keyboard_string = containedText[selectedIndex]
 	}
 }
-
-//draw_roundrect(x-50,y-20,x+50+clamp(string_width(longestLength)-80,0,999),y+(string_height(longestLength)-4)*array_length(containedText)-4,false)
-//bbox = [x-50,y-20,x+50+clamp(string_width(longestLength)-80,0,999),y+(string_height(longestLength)-4)*array_length(containedText)-4]

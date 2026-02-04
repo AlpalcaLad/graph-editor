@@ -18,3 +18,4 @@ c_dullteal = make_color_rgb(74,119,119)
 
 containedText = ""
 highlighted = false
+changeLineDl = false

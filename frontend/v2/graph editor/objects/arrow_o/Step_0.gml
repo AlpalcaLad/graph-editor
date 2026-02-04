@@ -65,7 +65,7 @@ if placed == 2 and to != noone and from != noone{
 	
 }
 draw_set_font(pixel)
-//draw_roundrect_ext(mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12,8,8,false)
+//TODO: multiple lines
 if !clickDl and placed == 2 and mouse_check_button(mb_left) and (point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
 	clickDl = true
 	highlighted = true
