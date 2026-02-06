@@ -26,3 +26,4 @@ longestLength = ""
 bbox=[]
 
 track = noone
+duration = 0

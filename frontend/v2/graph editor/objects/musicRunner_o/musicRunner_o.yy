@@ -1,16 +1,17 @@
 {
   "$GMObject":"",
-  "%Name":"musicPlayer_o",
+  "%Name":"musicRunner_o",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
+    {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":2,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":1,"eventType":3,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"musicPlayer_o",
+  "name":"musicRunner_o",
   "overriddenProperties":[],
   "parent":{
-    "name":"generator",
-    "path":"folders/objects/generator.yy",
+    "name":"algorithm",
+    "path":"folders/algorithm.yy",
   },
   "parentObjectId":null,
   "persistent":false,
@@ -30,7 +31,10 @@
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
-  "spriteId":null,
+  "spriteId":{
+    "name":"empty_purple_1_3",
+    "path":"sprites/empty_purple_1_3/empty_purple_1_3.yy",
+  },
   "spriteMaskId":null,
-  "visible":true,
+  "visible":false,
 }
