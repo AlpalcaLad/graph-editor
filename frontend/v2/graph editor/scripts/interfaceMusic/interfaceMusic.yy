@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"interfaceMusic",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"interfaceMusic",
+  "parent":{
+    "name":"scripts",
+    "path":"folders/scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

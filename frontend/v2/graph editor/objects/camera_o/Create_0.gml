@@ -21,4 +21,4 @@ view_camera[0] = camera
 xTo = x
 yTo = y
 
-window_set_fullscreen(true)
+window_set_fullscreen(false)

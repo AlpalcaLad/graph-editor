@@ -66,14 +66,36 @@ if placed == 2 and to != noone and from != noone{
 }
 draw_set_font(pixel)
 //TODO: multiple lines
-if !clickDl and placed == 2 and mouse_check_button(mb_left) and (point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
-	clickDl = true
-	highlighted = true
-	keyboard_string = containedText[selectedIndex]
-}
-if !clickDl and placed == 2 and mouse_check_button(mb_left) and !(point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
-	highlighted = false
-	clickDl = true
+if !clickDl and highlighted and mouse_check_button(mb_left) and point_in_rectangle(mouse_x,mouse_y,bbox[2]-8,bbox[1]-2,bbox[2]+2,bbox[1]+8){
+	var found = false
+	var newTrack = "track:"+getUploadedMusic()
+	track = newTrack
+	for (var i=0; i<array_length(containedText); i++){
+		if string_count("track:",containedText[i])==1{
+			array_set(containedText,i,newTrack)
+			if i==selectedIndex keyboard_string = newTrack
+			else keyboard_string = containedText[selectedIndex]
+			found = true
+			break
+		}
+	}
+	if !found{
+		if containedText[selectedIndex] == ""{
+			array_set(containedText,selectedIndex,newTrack)
+			keyboard_string = newTrack
+		}
+		else array_push(containedText,newTrack)
+	}
+} else {
+	if !clickDl and placed == 2 and mouse_check_button(mb_left) and (point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
+		clickDl = true
+		highlighted = true
+		keyboard_string = containedText[selectedIndex]
+	}
+	if !clickDl and placed == 2 and mouse_check_button(mb_left) and !(point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
+		highlighted = false
+		clickDl = true
+	}
 }
 if !keyboard_check(vk_up) and !keyboard_check(vk_down) changeLnDl = false
 if !keyboard_check(vk_enter) enterDl = false
@@ -101,10 +123,10 @@ if highlighted{
 		enterDl = true
 	}
 	containedText[selectedIndex] = keyboard_string
-	if containedText[selectedIndex] == "" and keyboard_check(vk_backspace) and !deleteDl and selectedIndex>0{
+	if containedText[selectedIndex] == "" and keyboard_check(vk_backspace) and !deleteDl and array_length(containedText)>1{
 		deleteDl = true
 		array_delete(containedText,selectedIndex,1)
-		selectedIndex --
+		if selectedIndex>0 selectedIndex --
 		keyboard_string = containedText[selectedIndex]
 	}
 }

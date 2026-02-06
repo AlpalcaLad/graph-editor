@@ -16,6 +16,7 @@ if placed == 2{
 	
 	//draw_text_transformed(mean(fromX,toX)-16-offset,mean(fromY,toY)-6,addToDraw+containedText+" <",1,1,0)
 	if highlighted{
+		//main box
 		var lines = array_length(containedText)
 		bbox = [mean(fromX,toX)-20-(0.5*clamp(string_width(longestLength),0,999)),mean(fromY,toY)-8-5*lines,mean(fromX,toX)+6+(0.5*clamp(string_width(longestLength),0,999)),mean(fromY,toY)+2+5*lines]
 		draw_set_color(arrowBoxColour)
@@ -35,6 +36,11 @@ if placed == 2{
 				if string_length(containedText[i])>string_length(longestLength) longestLength=containedText[i]
 			}
 		}
+		//upload button
+		draw_set_colour(arrowBoxUpload)
+		draw_roundrect_ext(bbox[2]-8,bbox[1]-2,bbox[2]+2,bbox[1]+8,6,6,false)
+		draw_set_colour(arrowBoxUploadText)
+		draw_text(bbox[2]-5,bbox[1]-5,"+")
 	} else {
 		draw_set_color(arrowBoxColour)
 		draw_roundrect_ext(mean(fromX,toX)-10,mean(fromY,toY)-8,mean(fromX,toX)+10,mean(fromY,toY)+8,8,8,false)
