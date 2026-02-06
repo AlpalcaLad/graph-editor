@@ -3,11 +3,11 @@ image_alpha = 0.5+0.25*(placed)+0.25*highlighted
 draw_set_alpha(image_alpha)
 bbox = [x-50,y-20,x+50+clamp(string_width(longestLength)-80,0,999),y+(string_height(longestLength)-4)*array_length(containedText)-4]
 
-draw_set_color(c_white)
+draw_set_color(boxColour)
 draw_roundrect(x-50,y-20,x+50+clamp(string_width(longestLength)-80,0,999),y+(string_height(longestLength)-4)*array_length(containedText)-4,false)
 draw_set_alpha(1)
 
-draw_set_color(c_black)
+draw_set_color(textColour)
 draw_set_font(spartan)
 draw_text_transformed(x-48,y-18,index,0.075,0.075,0)
 

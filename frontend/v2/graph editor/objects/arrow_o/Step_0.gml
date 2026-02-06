@@ -69,12 +69,42 @@ draw_set_font(pixel)
 if !clickDl and placed == 2 and mouse_check_button(mb_left) and (point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
 	clickDl = true
 	highlighted = true
-	keyboard_string = containedText
+	keyboard_string = containedText[selectedIndex]
 }
 if !clickDl and placed == 2 and mouse_check_button(mb_left) and !(point_in_rectangle(mouse_x,mouse_y,mean(fromX,toX)-24-(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)-12,mean(fromX,toX)+18+(0.5*clamp(string_width(containedText),0,999)),mean(fromY,toY)+12)){
 	highlighted = false
 	clickDl = true
 }
+if !keyboard_check(vk_up) and !keyboard_check(vk_down) changeLnDl = false
+if !keyboard_check(vk_enter) enterDl = false
+if !keyboard_check(vk_backspace) deleteDl = false
 if highlighted{
-	containedText = keyboard_string
+	if !changeLnDl{
+		if keyboard_check(vk_down){
+			if selectedIndex<array_length(containedText)-1{
+				selectedIndex ++
+				keyboard_string = containedText[selectedIndex]
+			}
+			changeLnDl = true
+		}
+		if keyboard_check(vk_up){
+			if selectedIndex>0{
+				selectedIndex --
+				keyboard_string = containedText[selectedIndex]
+			}
+			changeLnDl = true
+		}
+	}
+	if !enterDl and keyboard_check(vk_enter){
+		keyboard_string = ""
+		selectedIndex ++
+		enterDl = true
+	}
+	containedText[selectedIndex] = keyboard_string
+	if containedText[selectedIndex] == "" and keyboard_check(vk_backspace) and !deleteDl and selectedIndex>0{
+		deleteDl = true
+		array_delete(containedText,selectedIndex,1)
+		selectedIndex --
+		keyboard_string = containedText[selectedIndex]
+	}
 }

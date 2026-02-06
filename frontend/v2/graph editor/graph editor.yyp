@@ -34,6 +34,7 @@
   "resources":[
     {"id":{"name":"pixel","path":"fonts/pixel/pixel.yy",},},
     {"id":{"name":"spartan","path":"fonts/spartan/spartan.yy",},},
+    {"id":{"name":"TODO","path":"notes/TODO/TODO.yy",},},
     {"id":{"name":"arrow_o","path":"objects/arrow_o/arrow_o.yy",},},
     {"id":{"name":"bin_o","path":"objects/bin_o/bin_o.yy",},},
     {"id":{"name":"box_o","path":"objects/box_o/box_o.yy",},},
@@ -42,6 +43,7 @@
     {"id":{"name":"mouse_o","path":"objects/mouse_o/mouse_o.yy",},},
     {"id":{"name":"toolsManager_o","path":"objects/toolsManager_o/toolsManager_o.yy",},},
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
+    {"id":{"name":"colours","path":"scripts/colours/colours.yy",},},
     {"id":{"name":"drawTextColoured","path":"scripts/drawTextColoured/drawTextColoured.yy",},},
     {"id":{"name":"isNumeric","path":"scripts/isNumeric/isNumeric.yy",},},
     {"id":{"name":"bin_s","path":"sprites/bin_s/bin_s.yy",},},

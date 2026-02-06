@@ -1,5 +1,7 @@
 placed = 0
 clickDl = true
+enterDl = false
+deleteDl = false
 
 from = noone
 to = noone
@@ -16,6 +18,9 @@ c_redish = make_color_rgb(255,127,127)
 c_dullred = make_color_rgb(200,127,127)
 c_dullteal = make_color_rgb(74,119,119)
 
-containedText = ""
+containedText = [""]
+selectedIndex = 0
 highlighted = false
 changeLineDl = false
+longestLength = ""
+bbox=[]
